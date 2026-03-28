@@ -1,0 +1,223 @@
+import React, { useState } from 'react';
+import { Heart, Send, Shield, AlertTriangle, X, Phone, Wind, BookOpen } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+
+const CRISIS_WORDS = ['suicide', 'kill myself', 'end my life', 'want to die', 'self harm', 'hurt myself', 'no reason to live', 'cant go on', "can't go on", 'overdose', 'ending it'];
+const HELP_WORDS = ['help', 'helpless', 'desperate', 'crisis', 'emergency', 'need someone', 'drowning', 'breaking down'];
+const SUPPORT_WORDS = ['anxious', 'anxiety', 'panic', 'depressed', 'depression', 'sad', 'lonely', 'overwhelmed', 'scared', 'hopeless', 'worthless'];
+
+function detectIntent(text: string): 'crisis' | 'help' | 'support' | 'none' {
+  const lower = text.toLowerCase();
+  if (CRISIS_WORDS.some(w => lower.includes(w))) return 'crisis';
+  if (HELP_WORDS.some(w => lower.includes(w))) return 'help';
+  if (SUPPORT_WORDS.some(w => lower.includes(w))) return 'support';
+  return 'none';
+}
+
+const SEED_POSTS = [
+  { id: 1, text: "I've been feeling really overwhelmed with work lately. Just taking it one day at a time.", likes: 12, time: '2 hours ago', avatarBg: 'bg-[#e8c4b4]', emoji: '🌱', liked: false },
+  { id: 2, text: "Started my anxiety journal today. It's hard to confront the triggers, but I know it's a step forward.", likes: 24, time: '5 hours ago', avatarBg: 'bg-[#c4dde8]', emoji: '📝', liked: false },
+  { id: 3, text: "To anyone reading this who feels alone: you matter, and things can get better. Keep holding on. 💚", likes: 56, time: '1 day ago', avatarBg: 'bg-[#b8d4ba]', emoji: '🌟', liked: false },
+];
+
+export default function PeerCommunity({ setTab }: { setTab?: (tab: string) => void }) {
+  const [posts, setPosts] = useState(SEED_POSTS);
+  const [newPost, setNewPost] = useState('');
+  const [alert, setAlert] = useState<{ type: 'crisis' | 'help' | 'support'; text: string } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleTextChange = (val: string) => {
+    setNewPost(val);
+    const intent = detectIntent(val);
+    if (intent === 'crisis') {
+      setAlert({ type: 'crisis', text: val });
+    } else if (intent === 'help') {
+      setAlert({ type: 'help', text: val });
+    } else if (intent === 'support') {
+      setAlert({ type: 'support', text: val });
+    } else {
+      setAlert(null);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPost.trim()) return;
+    setIsSubmitting(true);
+    setTimeout(() => {
+      const bgs = ['bg-[#e8c4b4]', 'bg-[#c4dde8]', 'bg-[#b8d4ba]', 'bg-[#f0c896]', 'bg-[#c4b8e8]'];
+      const emojis = ['💭', '✨', '🌻', '🕊️', '💪', '🌿', '🌊', '⭐'];
+      setPosts([{
+        id: Date.now(), text: newPost, likes: 0, time: 'Just now',
+        avatarBg: bgs[Math.floor(Math.random() * bgs.length)],
+        emoji: emojis[Math.floor(Math.random() * emojis.length)],
+        liked: false
+      }, ...posts]);
+      setNewPost('');
+      setAlert(null);
+      setIsSubmitting(false);
+    }, 500);
+  };
+
+  const handleLike = (id: number) => {
+    setPosts(posts.map(p => p.id === id ? { ...p, likes: p.likes + (p.liked ? -1 : 1), liked: !p.liked } : p));
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto px-6 py-12">
+
+      <div className="mb-10 text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#e8f5e9] text-[#4a7c59] mb-5">
+          <Shield size={28} />
+        </div>
+        <h2 className="font-serif text-4xl text-[#2c3028] mb-3">Peer Community</h2>
+        <p className="text-lg text-[#6b7265]">A safe, anonymous space. No usernames. No identifiers. Ever.</p>
+        <div className="mt-3 bg-[#fff8e1] border border-[#ffe082] rounded-xl px-4 py-2.5 text-sm text-[#6b5e00] inline-block">
+          💬 If you're in crisis, your post will immediately show resources to help you.
+        </div>
+      </div>
+
+      {/* Post Form */}
+      <motion.div initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
+        className="bg-white rounded-[2rem] border border-[#d8d0c4] shadow-sm p-7 mb-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#e8f5e9]/40 to-transparent rounded-bl-full pointer-events-none" />
+
+        <form onSubmit={handleSubmit} className="relative z-10">
+          <div className="flex items-center gap-2 mb-4 text-[#4a7c59] font-semibold text-sm">
+            <Shield size={16} className="text-[#7a9e7e]" /> Safe & Anonymous Space — your identity is never stored
+          </div>
+
+          <textarea
+            value={newPost}
+            onChange={e => handleTextChange(e.target.value)}
+            placeholder="Share what's on your mind… a small win, a struggle, or words of encouragement for others."
+            className="w-full bg-[#fdfaf4] border-2 border-[#f0ece5] rounded-2xl p-5 text-base focus:outline-none focus:border-[#7a9e7e] focus:ring-4 focus:ring-[#7a9e7e]/10 resize-none h-28 transition-all placeholder:text-[#a3a89f]"
+            disabled={isSubmitting}
+          />
+
+          {/* Trigger word alert */}
+          <AnimatePresence>
+            {alert && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                {alert.type === 'crisis' && (
+                  <div className="mt-3 bg-[#fce4ec] border-2 border-[#f48fb1] rounded-2xl p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle size={20} className="text-[#c62828] shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="font-bold text-[#c62828] mb-1">We noticed you may be in crisis</div>
+                        <p className="text-sm text-[#2c3028] mb-3">You don't have to face this alone. Please reach out to a crisis helpline right now — trained support is available 24/7 in your country.</p>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => setTab && setTab('directory')}
+                            className="bg-[#c62828] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 hover:bg-[#b71c1c] transition-all">
+                            <Phone size={14} /> Find Crisis Helpline
+                          </button>
+                          <button type="button" onClick={() => setTab && setTab('resources')}
+                            className="bg-white border border-[#f48fb1] text-[#c62828] px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 hover:bg-[#fce4ec] transition-all">
+                            <Wind size={14} /> Breathing Exercise
+                          </button>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setAlert(null)} className="text-[#6b7265] hover:text-[#2c3028]"><X size={16} /></button>
+                    </div>
+                  </div>
+                )}
+                {alert.type === 'help' && (
+                  <div className="mt-3 bg-[#fff8e1] border-2 border-[#ffe082] rounded-2xl p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle size={20} className="text-[#f57f17] shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="font-bold text-[#f57f17] mb-1">It sounds like you need support</div>
+                        <p className="text-sm text-[#2c3028] mb-3">Help is available. Would you like to find a helpline in your country or take a free mental health screening?</p>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => setTab && setTab('directory')}
+                            className="bg-[#f57f17] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 hover:bg-[#e65100] transition-all">
+                            <Phone size={14} /> Find a Helpline
+                          </button>
+                          <button type="button" onClick={() => setTab && setTab('screening')}
+                            className="bg-white border border-[#ffe082] text-[#f57f17] px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 hover:bg-[#fff8e1] transition-all">
+                            Take Screening
+                          </button>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setAlert(null)} className="text-[#6b7265] hover:text-[#2c3028]"><X size={16} /></button>
+                    </div>
+                  </div>
+                )}
+                {alert.type === 'support' && (
+                  <div className="mt-3 bg-[#e8f5e9] border-2 border-[#a5d6a7] rounded-2xl p-4">
+                    <div className="flex items-start gap-3">
+                      <Heart size={18} className="text-[#4a7c59] shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="font-bold text-[#4a7c59] mb-1">We have resources that may help</div>
+                        <p className="text-sm text-[#2c3028] mb-3">You're not alone in feeling this way. Explore our self-help tools or take a quick screening.</p>
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => setTab && setTab('resources')}
+                            className="bg-[#4a7c59] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 hover:bg-[#3a6b3e] transition-all">
+                            <BookOpen size={14} /> Self-Help Tools
+                          </button>
+                          <button type="button" onClick={() => setTab && setTab('screening')}
+                            className="bg-white border border-[#a5d6a7] text-[#4a7c59] px-4 py-2 rounded-full text-sm font-bold hover:bg-[#e8f5e9] transition-all">
+                            Take Screening
+                          </button>
+                        </div>
+                      </div>
+                      <button type="button" onClick={() => setAlert(null)} className="text-[#6b7265] hover:text-[#2c3028]"><X size={16} /></button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
+            <span className="text-xs text-[#6b7265]">🔒 Your identity is never stored or displayed</span>
+            <button type="submit" disabled={!newPost.trim() || isSubmitting}
+              className="w-full sm:w-auto bg-[#4a7c59] hover:bg-[#3a6b3e] disabled:bg-[#d8d0c4] text-white px-7 py-3 rounded-full font-bold flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md">
+              {isSubmitting
+                ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}><Send size={16} /></motion.div>
+                : <><Send size={16} /> Post Anonymously</>}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+
+      {/* Posts */}
+      <div className="space-y-5">
+        <AnimatePresence>
+          {posts.map((post, index) => (
+            <motion.div layout key={post.id}
+              initial={{ opacity: 0, y: 16, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: index * 0.06, type: 'spring', stiffness: 300, damping: 25 }}
+              className="bg-white rounded-[2rem] border border-[#d8d0c4] p-7 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-4 mb-5">
+                <div className={`w-12 h-12 rounded-full ${post.avatarBg} flex items-center justify-center text-xl shadow-inner`}>
+                  {post.emoji}
+                </div>
+                <div>
+                  <div className="font-bold text-[#2c3028]">Anonymous Member</div>
+                  <div className="text-sm text-[#6b7265]">{post.time}</div>
+                </div>
+              </div>
+              <p className="text-[#2c3028] text-base mb-6 leading-relaxed">{post.text}</p>
+              <div className="flex gap-3 border-t border-[#f0ece5] pt-5">
+                <button onClick={() => handleLike(post.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${post.liked ? 'bg-[#fce4ec] text-[#c62828] border border-[#f8bbd0]' : 'bg-[#fdfaf4] text-[#6b7265] hover:text-[#c62828] hover:bg-[#fce4ec] border border-transparent'}`}>
+                  <Heart size={16} className={post.liked ? 'fill-[#c62828]' : ''} />
+                  {post.likes} {post.likes === 1 ? 'support' : 'supports'}
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+
+    </motion.div>
+  );
+}

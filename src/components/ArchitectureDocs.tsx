@@ -22,7 +22,7 @@ export default function ArchitectureDocs({ onBack }: { onBack?: () => void }) {
           </button>
         )}
         <div>
-          <h2 className="font-serif text-4xl text-[#2c3028] font-bold">MindBridge 2.0 System Specs</h2>
+          <h2 className="font-serif text-4xl text-[#2c3028] font-bold">MindBridge System Specs</h2>
           <p className="text-[#6b7265] mt-2">Technical documentation, architecture, and AI workflows.</p>
         </div>
       </div>
@@ -34,8 +34,8 @@ export default function ArchitectureDocs({ onBack }: { onBack?: () => void }) {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
               activeTab === tab.id 
-                ? 'bg-[#2d5a30] text-white shadow-md' 
-                : 'bg-white text-[#6b7265] hover:bg-[#e8f5e9] hover:text-[#2d5a30] border border-[#d8d0c4]'
+                ? 'bg-[#4a7c59] text-white shadow-md' 
+                : 'bg-white text-[#6b7265] hover:bg-[#e8f5e9] hover:text-[#4a7c59] border border-[#d8d0c4]'
             }`}
           >
             {tab.icon} {tab.label}
@@ -57,11 +57,11 @@ export default function ArchitectureDocs({ onBack }: { onBack?: () => void }) {
 const ArchitectureTab = () => (
   <div className="space-y-6 text-[#2c3028]">
     <h3 className="text-2xl font-serif font-bold border-b pb-2">System Architecture</h3>
-    <p>MindBridge 2.0 is a two-layer mental health access system connecting community digital screening with primary healthcare.</p>
+    <p>MindBridge is a two-layer mental health access system connecting community digital screening with primary healthcare.</p>
     
     <div className="grid md:grid-cols-2 gap-6 mt-6">
       <div className="bg-[#f5f0e8] p-6 rounded-2xl">
-        <h4 className="font-bold text-lg mb-4 text-[#2d5a30]">1. Community Digital Entry (Layer 1)</h4>
+        <h4 className="font-bold text-lg mb-4 text-[#4a7c59]">1. Community Digital Entry (Layer 1)</h4>
         <ul className="list-disc pl-5 space-y-2 text-sm">
           <li><strong>WhatsApp Business API:</strong> Primary interface for low-bandwidth, accessible entry.</li>
           <li><strong>Multi-Agent AI System:</strong> Handles triage, risk scoring, and micro-interventions.</li>
@@ -199,7 +199,7 @@ const ChatBubble = ({ sender, text, agent }: any) => (
     {agent && <span className="text-[10px] text-gray-500 mb-1 ml-1">{agent}</span>}
     <div className={`px-4 py-2 rounded-2xl max-w-[85%] ${
       sender === 'user' 
-        ? 'bg-[#2d5a30] text-white rounded-tr-sm' 
+        ? 'bg-[#4a7c59] text-white rounded-tr-sm' 
         : 'bg-white text-[#2c3028] rounded-tl-sm shadow-sm'
     }`}>
       {text}

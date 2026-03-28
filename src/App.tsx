@@ -4,18 +4,21 @@
  */
 
 import { useState } from 'react';
-import { Home as HomeIcon, MessageCircle, Users, Phone, BookOpen, BarChart3, LogOut, ShieldCheck } from 'lucide-react';
+import { Home as HomeIcon, MessageCircle, Users, Phone, BookOpen, BarChart3, LogOut, ShieldCheck, Heart, Globe2, Stethoscope } from 'lucide-react';
 import Home from './components/Home';
 import Screening from './components/Screening';
 import Community from './components/Community';
+import PeerCommunity from './components/PeerCommunity';
 import Directory from './components/Directory';
 import Resources from './components/Resources';
+import ClinicalResources from './components/ClinicalResources';
 import Dashboard from './components/Dashboard';
 import SignIn from './components/SignIn';
 import AdminDashboard from './components/AdminDashboard';
+import Team from './components/Team';
 
 export default function App() {
-  const [userRole, setUserRole] = useState<string | null>(null); // 'patient', 'clinic', 'admin'
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState('home');
 
   const handleSignIn = (role: string) => {
@@ -25,104 +28,101 @@ export default function App() {
     if (role === 'admin') setCurrentTab('admin');
   };
 
-  const handleSignOut = () => {
-    setUserRole(null);
-    setCurrentTab('home');
-  };
+  const handleSignOut = () => { setUserRole(null); setCurrentTab('home'); };
 
   const renderTab = () => {
     switch (currentTab) {
-      case 'home': return <Home setTab={setCurrentTab} />;
-      case 'screening': return <Screening />;
-      case 'community': return <Community />;
-      case 'directory': return <Directory />;
-      case 'resources': return <Resources />;
-      case 'dashboard': return <Dashboard />;
-      case 'admin': return <AdminDashboard />;
-      default: return <Home setTab={setCurrentTab} />;
+      case 'home':       return <Home setTab={setCurrentTab} />;
+      case 'screening':  return <Screening setTab={setCurrentTab} />;
+      case 'community':  return <Community setTab={setCurrentTab} />;
+      case 'peer':       return <PeerCommunity setTab={setCurrentTab} />;
+      case 'directory':  return <Directory />;
+      case 'resources':  return <Resources />;
+      case 'clinical':   return <ClinicalResources />;
+      case 'dashboard':  return <Dashboard />;
+      case 'team':       return <Team />;
+      case 'admin':      return <AdminDashboard />;
+      default:           return <Home setTab={setCurrentTab} />;
     }
   };
 
-  if (!userRole) {
-    return <SignIn onSignIn={handleSignIn} />;
-  }
+  if (!userRole) return <SignIn onSignIn={handleSignIn} />;
 
   return (
-    <div className="min-h-screen bg-[#f5f0e8] text-[#2c3028] font-sans">
-      {/* Crisis Strip - Only show for patients */}
+    <div className="min-h-screen bg-[#f7f3ed] text-[#2c3028] font-sans">
+
+      {/* Crisis Strip — patients only */}
       {userRole === 'patient' && (
-        <div className="bg-[#c4605a] text-white py-2 px-4 text-center text-sm font-medium flex items-center justify-center gap-2">
-          <span>🆘 If you're in crisis, please reach out for help immediately.</span>
-          <button onClick={() => setCurrentTab('directory')} className="underline font-bold">Find a helpline in your country</button>
+        <div className="bg-[#c4605a] text-white py-2 px-4 text-center text-sm font-medium flex items-center justify-center gap-2 flex-wrap">
+          <span>🆘 If you're in crisis, help is available right now.</span>
+          <button onClick={() => setCurrentTab('directory')} className="underline font-bold">Find your country's helpline →</button>
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="bg-[#2d5a30] px-6 py-4 sticky top-0 z-50 shadow-md flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white font-serif text-2xl font-bold cursor-pointer" onClick={() => setCurrentTab(userRole === 'patient' ? 'home' : userRole === 'clinic' ? 'dashboard' : 'admin')}>
+      {/* Nav */}
+      <nav className="bg-[#4a7c59] px-4 md:px-6 py-3 sticky top-0 z-50 shadow-md flex items-center justify-between">
+        <div className="flex items-center gap-2 text-white font-serif text-xl font-bold cursor-pointer shrink-0"
+          onClick={() => setCurrentTab(userRole === 'patient' ? 'home' : userRole === 'clinic' ? 'dashboard' : 'admin')}>
           <span>🌿</span> MindBridge
-          <span className="text-xs font-sans bg-white/20 px-2 py-1 rounded-full ml-2 uppercase tracking-wider">
-            {userRole}
-          </span>
+          <span className="text-xs font-sans bg-white/20 px-2 py-0.5 rounded-full ml-1 uppercase tracking-wider hidden sm:inline">{userRole}</span>
         </div>
-        
-        <div className="hidden md:flex gap-2 items-center">
+
+        <div className="hidden md:flex gap-1 items-center flex-wrap">
           {userRole === 'patient' && (
             <>
-              <NavButton active={currentTab === 'home'} onClick={() => setCurrentTab('home')} icon={<HomeIcon size={18} />} label="Home" />
-              <NavButton active={currentTab === 'screening'} onClick={() => setCurrentTab('screening')} icon={<MessageCircle size={18} />} label="Screening" />
-              <NavButton active={currentTab === 'community'} onClick={() => setCurrentTab('community')} icon={<Users size={18} />} label="Community" />
-              <NavButton active={currentTab === 'directory'} onClick={() => setCurrentTab('directory')} icon={<Phone size={18} />} label="Directory" />
-              <NavButton active={currentTab === 'resources'} onClick={() => setCurrentTab('resources')} icon={<BookOpen size={18} />} label="Resources" />
+              <NavButton active={currentTab === 'home'}      onClick={() => setCurrentTab('home')}      icon={<HomeIcon size={16} />}    label="Home" />
+              <NavButton active={currentTab === 'screening'} onClick={() => setCurrentTab('screening')} icon={<MessageCircle size={16} />} label="Screening" />
+              <NavButton active={currentTab === 'community'} onClick={() => setCurrentTab('community')} icon={<Globe2 size={16} />}      label="Community" />
+              <NavButton active={currentTab === 'peer'}      onClick={() => setCurrentTab('peer')}      icon={<Users size={16} />}       label="Peer Space" />
+              <NavButton active={currentTab === 'directory'} onClick={() => setCurrentTab('directory')} icon={<Phone size={16} />}       label="Directory" />
+              <NavButton active={currentTab === 'resources'} onClick={() => setCurrentTab('resources')} icon={<BookOpen size={16} />}    label="Resources" />
+              <NavButton active={currentTab === 'team'}      onClick={() => setCurrentTab('team')}      icon={<Heart size={16} />}       label="Our Team" />
             </>
           )}
-
           {userRole === 'clinic' && (
             <>
-              <NavButton active={currentTab === 'dashboard'} onClick={() => setCurrentTab('dashboard')} icon={<BarChart3 size={18} />} label="Clinic Dashboard" />
-              <NavButton active={currentTab === 'resources'} onClick={() => setCurrentTab('resources')} icon={<BookOpen size={18} />} label="Patient Resources" />
+              <NavButton active={currentTab === 'dashboard'} onClick={() => setCurrentTab('dashboard')} icon={<BarChart3 size={16} />}      label="Dashboard" />
+              <NavButton active={currentTab === 'clinical'}  onClick={() => setCurrentTab('clinical')}  icon={<Stethoscope size={16} />}    label="Clinical Tools" />
+              <NavButton active={currentTab === 'directory'} onClick={() => setCurrentTab('directory')} icon={<Phone size={16} />}           label="Directory" />
             </>
           )}
-
           {userRole === 'admin' && (
             <>
-              <NavButton active={currentTab === 'admin'} onClick={() => setCurrentTab('admin')} icon={<ShieldCheck size={18} />} label="System Admin" />
-              <NavButton active={currentTab === 'dashboard'} onClick={() => setCurrentTab('dashboard')} icon={<BarChart3 size={18} />} label="Clinic View" />
+              <NavButton active={currentTab === 'admin'}     onClick={() => setCurrentTab('admin')}     icon={<ShieldCheck size={16} />}   label="System Admin" />
+              <NavButton active={currentTab === 'dashboard'} onClick={() => setCurrentTab('dashboard')} icon={<BarChart3 size={16} />}     label="Clinic View" />
             </>
           )}
-
-          <div className="w-px h-6 bg-white/20 mx-2"></div>
-          <button onClick={handleSignOut} className="text-white/75 hover:text-white flex items-center gap-2 px-3 py-2 text-sm font-medium transition-colors">
-            <LogOut size={18} /> Sign Out
+          <div className="w-px h-5 bg-white/20 mx-1" />
+          <button onClick={handleSignOut} className="text-white/75 hover:text-white flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors rounded-full hover:bg-white/10">
+            <LogOut size={16} /> Sign Out
           </button>
         </div>
       </nav>
 
-      {/* Main Content */}
-      <main className="pb-20 md:pb-0">
-        {renderTab()}
-      </main>
-      
+      <main className="pb-24 md:pb-0">{renderTab()}</main>
+
       {/* Mobile Bottom Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#2d5a30] text-white flex justify-around py-3 pb-safe z-50">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#4a7c59] text-white flex justify-around py-2 z-50">
         {userRole === 'patient' && (
           <>
-            <MobileNavButton active={currentTab === 'home'} onClick={() => setCurrentTab('home')} icon={<HomeIcon size={20} />} label="Home" />
-            <MobileNavButton active={currentTab === 'screening'} onClick={() => setCurrentTab('screening')} icon={<MessageCircle size={20} />} label="Screening" />
-            <MobileNavButton active={currentTab === 'community'} onClick={() => setCurrentTab('community')} icon={<Users size={20} />} label="Community" />
-            <MobileNavButton active={currentTab === 'directory'} onClick={() => setCurrentTab('directory')} icon={<Phone size={20} />} label="Directory" />
+            <MobileNavButton active={currentTab === 'home'}      onClick={() => setCurrentTab('home')}      icon={<HomeIcon size={20} />}       label="Home" />
+            <MobileNavButton active={currentTab === 'screening'} onClick={() => setCurrentTab('screening')} icon={<MessageCircle size={20} />}  label="Screen" />
+            <MobileNavButton active={currentTab === 'peer'}      onClick={() => setCurrentTab('peer')}      icon={<Users size={20} />}          label="Peers" />
+            <MobileNavButton active={currentTab === 'directory'} onClick={() => setCurrentTab('directory')} icon={<Phone size={20} />}          label="Helplines" />
+            <MobileNavButton active={currentTab === 'resources'} onClick={() => setCurrentTab('resources')} icon={<BookOpen size={20} />}       label="Resources" />
           </>
         )}
         {userRole === 'clinic' && (
           <>
-            <MobileNavButton active={currentTab === 'dashboard'} onClick={() => setCurrentTab('dashboard')} icon={<BarChart3 size={20} />} label="Dashboard" />
-            <MobileNavButton active={currentTab === 'resources'} onClick={() => setCurrentTab('resources')} icon={<BookOpen size={20} />} label="Resources" />
+            <MobileNavButton active={currentTab === 'dashboard'} onClick={() => setCurrentTab('dashboard')} icon={<BarChart3 size={20} />}    label="Dashboard" />
+            <MobileNavButton active={currentTab === 'clinical'}  onClick={() => setCurrentTab('clinical')}  icon={<Stethoscope size={20} />}  label="Tools" />
+            <MobileNavButton active={currentTab === 'directory'} onClick={() => setCurrentTab('directory')} icon={<Phone size={20} />}         label="Directory" />
           </>
         )}
         {userRole === 'admin' && (
           <>
-            <MobileNavButton active={currentTab === 'admin'} onClick={() => setCurrentTab('admin')} icon={<ShieldCheck size={20} />} label="Admin" />
-            <MobileNavButton active={currentTab === 'dashboard'} onClick={() => setCurrentTab('dashboard')} icon={<BarChart3 size={20} />} label="Clinic" />
+            <MobileNavButton active={currentTab === 'admin'}     onClick={() => setCurrentTab('admin')}     icon={<ShieldCheck size={20} />}  label="Admin" />
+            <MobileNavButton active={currentTab === 'dashboard'} onClick={() => setCurrentTab('dashboard')} icon={<BarChart3 size={20} />}    label="Clinic" />
           </>
         )}
         <MobileNavButton active={false} onClick={handleSignOut} icon={<LogOut size={20} />} label="Sign Out" />
@@ -132,25 +132,18 @@ export default function App() {
 }
 
 const NavButton = ({ active, onClick, icon, label }: any) => (
-  <button 
-    onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+  <button onClick={onClick}
+    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
       active ? 'bg-white/20 text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'
-    }`}
-  >
-    {icon}
-    {label}
+    }`}>
+    {icon}{label}
   </button>
 );
 
 const MobileNavButton = ({ active, onClick, icon, label }: any) => (
-  <button 
-    onClick={onClick}
-    className={`flex flex-col items-center gap-1 p-2 ${
-      active ? 'text-white' : 'text-white/60'
-    }`}
-  >
+  <button onClick={onClick}
+    className={`flex flex-col items-center gap-0.5 p-2 min-w-[52px] ${active ? 'text-white' : 'text-white/55'}`}>
     {icon}
-    <span className="text-[10px] font-medium">{label}</span>
+    <span className="text-[9px] font-medium leading-tight">{label}</span>
   </button>
 );

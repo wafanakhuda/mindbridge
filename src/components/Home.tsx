@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import Disclaimer from './Disclaimer';
-import { ArrowRight, MessageCircle, ShieldCheck, Users, Activity, Flame, Wind, Sparkles } from 'lucide-react';
+import { ArrowRight, MessageCircle, ShieldCheck, Users, Activity, Sparkles } from 'lucide-react';
 
 export default function Home({ setTab }: { setTab: (tab: string) => void }) {
   const containerVariants = {
@@ -27,7 +27,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
             className="w-full h-full object-cover scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1a361d]/90 via-[#2d5a30]/80 to-[#f5f0e8] mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#2d5a45]/90 via-[#4a7c59]/80 to-[#f5f0e8] mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#f5f0e8] via-transparent to-transparent"></div>
         </div>
 
@@ -38,7 +38,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
             transition={{ duration: 1, ease: "easeOut" }}
           >
             <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium tracking-wide mb-8 backdrop-blur-md shadow-lg">
-              MindBridge 2.0 • Hybrid AI-Primary Care System
+              Hack for Health Equity 2026 · Bridging Communities to Mental Health Care
             </span>
             <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-[1.1] mb-6 drop-shadow-2xl">
               Mental health support,<br/>
@@ -50,7 +50,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
               </em>
             </h1>
             <p className="text-white/90 text-lg md:text-2xl mb-10 max-w-3xl mx-auto font-light leading-relaxed drop-shadow-md">
-              A two-layer system connecting WhatsApp AI triage with primary healthcare clinics — anonymously, gently, and without stigma.
+              A hybrid community–primary care mental health system connecting AI screening, clinic referrals, and structured follow-up — for every community, in 195 countries.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -65,7 +65,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
               </button>
               
               <a 
-                href="https://wa.me/1234567890?text=Hi%20MindBridge,%20I%20need%20support" 
+                href="https://wa.me/?text=Hi%20MindBridge,%20I%20need%20mental%20health%20support" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="group bg-[#25D366]/10 border border-[#25D366]/30 hover:bg-[#25D366] hover:border-[#25D366] text-white px-8 py-4 rounded-full font-medium transition-all backdrop-blur-sm flex items-center gap-2 w-full sm:w-auto justify-center shadow-lg"
@@ -78,52 +78,60 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
         </div>
       </div>
 
-      {/* Engagement Layer (Patient Dashboard) */}
+      {/* WHO Global Stats Bar */}
+      <div className="bg-white border-b border-[#d8d0c4] py-6 px-6">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          {[
+            { num: '1 in 7', label: 'people live with mental illness', src: 'WHO, 2025' },
+            { num: '1B+', label: 'people affected globally', src: 'WHO, 2025' },
+            { num: '2 in 3', label: 'receive no care at all', src: 'WHO, 2025' },
+            { num: '195', label: 'countries in our directory', src: 'MindBridge' },
+          ].map((s) => (
+            <div key={s.num}>
+              <div className="font-serif text-3xl md:text-4xl font-bold text-[#4a7c59]">{s.num}</div>
+              <div className="text-sm text-[#6b7265] mt-1 font-medium">{s.label}</div>
+              <div className="text-xs text-[#a3a89f] mt-0.5">Source: {s.src}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Care Pathway Banner */}
       <div className="relative z-20 -mt-16 max-w-6xl mx-auto px-6 mb-16">
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
           className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-2xl rounded-3xl overflow-hidden p-6 md:p-8"
         >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-6">
-              <div className="bg-gradient-to-br from-orange-100 to-orange-50 text-orange-600 p-4 rounded-2xl flex flex-col items-center justify-center min-w-[100px] shadow-sm border border-orange-200/50">
-                <Flame size={32} className="mb-1" />
-                <span className="font-bold text-xl">5 Days</span>
-                <span className="text-xs font-bold uppercase tracking-wider opacity-80">Streak</span>
-              </div>
-              <div>
-                <h3 className="font-serif text-2xl font-bold text-[#2c3028] mb-1 flex items-center gap-2">
-                  Welcome back, Friend <Sparkles size={20} className="text-[#d4843a]" />
-                </h3>
-                <p className="text-[#6b7265]">You're doing great. Your next check-in is due tomorrow.</p>
-                <div className="mt-3 w-full bg-[#f0ece5] rounded-full h-2.5 shadow-inner overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: '45%' }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    className="bg-gradient-to-r from-[#4d7a52] to-[#2d5a30] h-2.5 rounded-full relative"
-                  >
-                    <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full animate-[shimmer_2s_infinite]"></div>
-                  </motion.div>
+          <div className="text-center mb-6">
+            <p className="text-sm font-semibold text-[#6b7265] uppercase tracking-widest mb-2">The MindBridge Care Pathway</p>
+            <p className="text-[#2c3028] font-serif text-xl italic">"This is not because care does not exist. It is because the pathway to care is broken." — WHO, 2025</p>
+          </div>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-0">
+            {[
+              { icon: '📱', step: '1', title: 'Community Screening', desc: 'Anonymous AI triage via app or WhatsApp', color: 'bg-[#e8f5e9] border-[#c8e6c9] text-[#2e7d32]' },
+              { icon: '🏥', step: '2', title: 'Primary Care Link', desc: 'Risk-based referral to local clinics', color: 'bg-[#e3f2fd] border-[#bbdefb] text-[#1565c0]' },
+              { icon: '📲', step: '3', title: 'Structured Follow-Up', desc: '7, 30 & 90-day automated check-ins', color: 'bg-[#fff8e1] border-[#ffe082] text-[#f57f17]' },
+            ].map((s, i) => (
+              <div key={s.step} className="flex items-center gap-2 w-full md:w-auto">
+                <div className={`flex-1 md:w-56 border-2 ${s.color} rounded-2xl p-4 text-center`}>
+                  <div className="text-2xl mb-1">{s.icon}</div>
+                  <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${s.color.split(' ')[2]}`}>Step {s.step}</div>
+                  <div className="font-bold text-[#2c3028] text-sm">{s.title}</div>
+                  <div className="text-xs text-[#6b7265] mt-1">{s.desc}</div>
                 </div>
-                <p className="text-xs text-[#6b7265] mt-2 font-medium">Recovery Progress: Level 2</p>
+                {i < 2 && <div className="text-2xl text-[#d8d0c4] font-bold hidden md:block mx-2">→</div>}
               </div>
-            </div>
-            
-            <button 
-              onClick={() => setTab('resources')}
-              className="group bg-gradient-to-br from-[#e8f5e9] to-[#c8e6c9] hover:from-[#c8e6c9] hover:to-[#a5d6a7] text-[#2e7d32] border border-[#a5d6a7] px-6 py-4 rounded-2xl font-bold flex items-center gap-4 transition-all w-full md:w-auto justify-center shadow-sm hover:shadow-md"
+            ))}
+          </div>
+          <div className="text-center mt-6">
+            <button
+              onClick={() => setTab('screening')}
+              className="bg-[#d4843a] text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-[#c07030] transition-all hover:shadow-xl hover:-translate-y-0.5"
             >
-              <div className="bg-white/50 p-2 rounded-xl group-hover:scale-110 transition-transform">
-                <Wind size={24} />
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-medium opacity-80">Feeling overwhelmed?</div>
-                <div className="text-lg">Instant Calm Mode</div>
-              </div>
+              Start Free Screening →
             </button>
           </div>
         </motion.div>
@@ -132,7 +140,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
       {/* Features Section */}
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-16">
-          <h2 className="font-serif text-4xl md:text-5xl text-[#2c3028] mb-6">How MindBridge 2.0 Works</h2>
+          <h2 className="font-serif text-4xl md:text-5xl text-[#2c3028] mb-6">How MindBridge Works</h2>
           <p className="text-lg text-[#6b7265] max-w-2xl mx-auto">A seamless, hybrid system bridging the gap between community isolation and primary care.</p>
         </div>
 

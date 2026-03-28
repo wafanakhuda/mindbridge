@@ -9,6 +9,16 @@
     --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   }
+
+  /* Softer, calmer green palette — override Tailwind hardcoded values via CSS vars */
+  body {
+    /* nav/hero dark: softer forest #3a6b3e instead of #2d5a30 */
+    --c-nav: #4a7c59;
+    --c-nav-dark: #3a6b3e;
+    --c-sage: #7a9e7e;
+    --c-sage-light: #b8d4ba;
+    --c-cream: #f7f3ed;
+  }
 }
 
 @keyframes shimmer {

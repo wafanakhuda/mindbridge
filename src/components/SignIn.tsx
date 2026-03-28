@@ -26,13 +26,14 @@ export default function SignIn({ onSignIn }: { onSignIn: (role: string) => void 
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12 relative z-10"
       >
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#2d5a30] text-white mb-6 shadow-xl">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-[#4a7c59] text-white mb-6 shadow-xl">
           <span className="text-4xl">🌿</span>
         </div>
         <h1 className="font-serif text-5xl font-bold text-[#2c3028] mb-4">MindBridge</h1>
         <p className="text-xl text-[#6b7265] max-w-md mx-auto">
-          Select your portal to access the platform.
+          Hack for Health Equity 2026 · Select your portal to get started.
         </p>
+        <p className="text-sm text-[#a3a89f] mt-2">Dr Victoria Thomas · Dr Nameera Banu · Dr Chidinma Ndiagwalu · Wafa Nakhuda</p>
       </motion.div>
 
       <motion.div 

@@ -20,7 +20,7 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-[#2d5a30] text-white p-2 rounded-xl shadow-md">
+            <div className="bg-[#4a7c59] text-white p-2 rounded-xl shadow-md">
                <Activity size={24} />
             </div>
             <h2 className="font-serif text-4xl text-[#2c3028]">Primary Care Dashboard</h2>
@@ -62,9 +62,9 @@ export default function Dashboard() {
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#f0ece5] to-transparent rounded-bl-full pointer-events-none opacity-50"></div>
           <div className="flex items-center justify-between mb-8 relative z-10">
             <h4 className="font-bold text-2xl text-[#2c3028] flex items-center gap-3">
-              <Users className="text-[#2d5a30]" size={28} /> Patient Triage & Follow-up
+              <Users className="text-[#4a7c59]" size={28} /> Patient Triage & Follow-up
             </h4>
-            <button className="text-[#2d5a30] text-sm font-bold hover:underline">View All Patients</button>
+            <button className="text-[#4a7c59] text-sm font-bold hover:underline">View All Patients</button>
           </div>
           <div className="space-y-4 relative z-10">
             <PatientRow 
@@ -118,6 +118,44 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </div>
+
+      {/* Outcomes Row */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8"
+      >
+        {[
+          { label: 'Follow-Up Completion', pct: 89, color: '#2d5a30', bg: 'bg-[#e8f5e9]', text: 'text-[#2e7d32]', desc: 'of referred patients completed their 7-day follow-up' },
+          { label: '3-Month Retention',    pct: 72, color: '#d4843a', bg: 'bg-[#fff8e1]', text: 'text-[#f57f17]', desc: 'still engaged with care at 3 months post-screening' },
+          { label: 'Referral Attended',    pct: 65, color: '#7baec8', bg: 'bg-[#e3f2fd]', text: 'text-[#1565c0]', desc: 'of clinic referrals resulted in attended appointments' },
+        ].map(m => (
+          <div key={m.label} className={`${m.bg} border border-[#d8d0c4] rounded-[1.5rem] p-6 flex items-center gap-5`}>
+            <div className="relative w-16 h-16 shrink-0">
+              <svg viewBox="0 0 36 36" className="w-16 h-16 -rotate-90">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e0e0e0" strokeWidth="3" />
+                <motion.circle
+                  cx="18" cy="18" r="15.9" fill="none"
+                  stroke={m.color} strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeDasharray={`${m.pct} 100`}
+                  initial={{ strokeDasharray: '0 100' }}
+                  animate={{ strokeDasharray: `${m.pct} 100` }}
+                  transition={{ duration: 1.5, delay: 0.8, ease: 'easeOut' }}
+                />
+              </svg>
+              <div className={`absolute inset-0 flex items-center justify-center font-serif font-bold text-sm ${m.text}`}>
+                {m.pct}%
+              </div>
+            </div>
+            <div>
+              <div className={`font-bold text-sm ${m.text}`}>{m.label}</div>
+              <div className="text-xs text-[#6b7265] mt-1 leading-relaxed">{m.desc}</div>
+            </div>
+          </div>
+        ))}
+      </motion.div>
     </motion.div>
   );
 }
@@ -167,9 +205,9 @@ const PatientRow = ({ initials, name, age, gender, riskScore, risk, riskClass, a
       </div>
     </div>
     <div className="bg-[#f5f0e8] p-3 rounded-xl text-sm text-[#2c3028] flex items-start gap-2 border border-[#e5ddd0]">
-      <Bot size={16} className="text-[#2d5a30] shrink-0 mt-0.5" />
+      <Bot size={16} className="text-[#4a7c59] shrink-0 mt-0.5" />
       <div>
-        <span className="font-bold text-[#2d5a30]">AI CareNavigator:</span> {aiRec}
+        <span className="font-bold text-[#4a7c59]">AI CareNavigator:</span> {aiRec}
       </div>
     </div>
   </motion.div>

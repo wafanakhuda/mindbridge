@@ -21,7 +21,7 @@ const FREQ_OPTIONS = [
 
 const INTRO_OPTIONS = ["I've been feeling anxious lately", "I'm going through a tough time", "Just want to check in on myself", "I've been feeling low"];
 
-export default function Screening() {
+export default function Screening({ setTab }: { setTab?: (tab: string) => void }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [step, setStep] = useState<'intro' | 'phq0' | 'phq1' | 'gad0' | 'gad1' | 'done'>('intro');
   const [isTyping, setIsTyping] = useState(false);
@@ -142,7 +142,7 @@ export default function Screening() {
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-semibold text-[#1a361d]">{part.slice(2, -2)}</strong>;
+        return <strong key={i} className="font-semibold text-[#2d5a45]">{part.slice(2, -2)}</strong>;
       }
       return <span key={i}>{part}</span>;
     });
@@ -153,6 +153,7 @@ export default function Screening() {
       <Results
         scores={scores}
         userContext={userContext}
+        setTab={setTab}
         onRestart={() => {
           setMessages([]);
           setStep('intro');
@@ -196,7 +197,7 @@ export default function Screening() {
             </div>
           </div>
           <a
-            href="https://wa.me/1234567890?text=Hi%20MindBridge"
+            href="https://wa.me/?text=Hi%20MindBridge,%20I%20need%20support"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:flex items-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] px-4 py-2 rounded-full text-sm font-semibold transition-colors"
@@ -289,7 +290,7 @@ export default function Screening() {
             <button
               onClick={handleFreeText}
               disabled={!freeText.trim() || isAiLoading}
-              className="w-10 h-10 bg-[#2d5a30] disabled:bg-[#d8d0c4] text-white rounded-full flex items-center justify-center transition-all hover:bg-[#4d7a52] disabled:cursor-not-allowed shrink-0"
+              className="w-10 h-10 bg-[#4a7c59] disabled:bg-[#d8d0c4] text-white rounded-full flex items-center justify-center transition-all hover:bg-[#4d7a52] disabled:cursor-not-allowed shrink-0"
             >
               <Send size={16} className="ml-0.5" />
             </button>
@@ -303,7 +304,7 @@ export default function Screening() {
 // ─────────────────────────────────────────────
 // Results — calls RiskAgent + CareNavigatorAgent
 // ─────────────────────────────────────────────
-function Results({ scores, userContext, onRestart }: { scores: any; userContext: string; onRestart: () => void }) {
+function Results({ scores, userContext, onRestart, setTab }: { scores: any; userContext: string; onRestart: () => void; setTab?: (tab: string) => void }) {
   const [analysis, setAnalysis] = useState<RiskAnalysis | null>(null);
   const [steps, setSteps] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -341,7 +342,7 @@ function Results({ scores, userContext, onRestart }: { scores: any; userContext:
       {loading ? (
         <div className="bg-white rounded-[2rem] p-16 text-center shadow-sm border border-[#d8d0c4]">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#e8f5e9] mb-6">
-            <Sparkles size={28} className="text-[#2d5a30] animate-pulse" />
+            <Sparkles size={28} className="text-[#4a7c59] animate-pulse" />
           </div>
           <h3 className="font-serif text-2xl text-[#2c3028] mb-3">AI is analysing your responses…</h3>
           <p className="text-[#6b7265]">Our Gemini-powered agents are personalising your results</p>
@@ -378,7 +379,7 @@ function Results({ scores, userContext, onRestart }: { scores: any; userContext:
               { label: 'GAD-2 — Anxiety', score: scores.gad, max: 6, isHigh: scores.gad >= 2 },
             ].map(s => (
               <motion.div whileHover={{ y: -4 }} key={s.label} className="bg-white border border-[#d8d0c4] rounded-[2rem] p-8 text-center shadow-sm">
-                <div className={`font-serif text-6xl font-bold mb-2 ${s.isHigh ? 'text-[#c4605a]' : 'text-[#2d5a30]'}`}>
+                <div className={`font-serif text-6xl font-bold mb-2 ${s.isHigh ? 'text-[#c4605a]' : 'text-[#4a7c59]'}`}>
                   {s.score}/{s.max}
                 </div>
                 <div className="text-sm text-[#6b7265] uppercase tracking-widest font-bold">{s.label}</div>
@@ -389,7 +390,7 @@ function Results({ scores, userContext, onRestart }: { scores: any; userContext:
           {/* AI-Generated Steps */}
           <div className="bg-white border border-[#d8d0c4] rounded-[2rem] p-8 mb-8 shadow-sm">
             <h3 className="font-serif text-2xl font-bold mb-6 flex items-center gap-3 text-[#2c3028]">
-              <span className="bg-[#e8f5e9] p-2 rounded-xl"><Sparkles size={20} className="text-[#2d5a30]" /></span>
+              <span className="bg-[#e8f5e9] p-2 rounded-xl"><Sparkles size={20} className="text-[#4a7c59]" /></span>
               Your personalised next steps
             </h3>
             <ul className="space-y-4">
@@ -410,12 +411,14 @@ function Results({ scores, userContext, onRestart }: { scores: any; userContext:
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <button onClick={onRestart} className="flex items-center justify-center gap-2 bg-transparent border-2 border-[#2d5a30] text-[#2d5a30] hover:bg-[#2d5a30] hover:text-white px-8 py-4 rounded-full font-semibold transition-all">
+            <button onClick={onRestart} className="flex items-center justify-center gap-2 bg-transparent border-2 border-[#4a7c59] text-[#4a7c59] hover:bg-[#4a7c59] hover:text-white px-8 py-4 rounded-full font-semibold transition-all">
               <RefreshCw size={18} /> Retake Screening
             </button>
             {risk !== 'low' && (
-              <button className="flex items-center justify-center gap-2 bg-[#d4843a] text-white px-8 py-4 rounded-full font-semibold hover:bg-[#c07030] transition-all shadow-[0_0_20px_rgba(212,132,58,0.3)]">
-                Find Support <ArrowRight size={18} />
+              <button
+                onClick={() => setTab && setTab('directory')}
+                className="flex items-center justify-center gap-2 bg-[#d4843a] text-white px-8 py-4 rounded-full font-semibold hover:bg-[#c07030] transition-all shadow-[0_0_20px_rgba(212,132,58,0.3)]">
+                🌍 Find a Helpline <ArrowRight size={18} />
               </button>
             )}
           </div>

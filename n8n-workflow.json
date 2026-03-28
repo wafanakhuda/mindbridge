@@ -1,403 +1,186 @@
 {
-  "name": "MindBridge — Full Triage & Follow-Up Flow",
+  "name": "MindBridge — Final Triage & Follow-Up Flow",
   "nodes": [
     {
+      "parameters": { "httpMethod": "POST", "path": "mindbridge-2026", "responseMode": "responseNode", "options": {} },
+      "id": "node-001", "name": "Webhook Trigger", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [180, 300]
+    },
+    {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "mindbridge-triage",
-        "responseMode": "responseNode",
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst message = (body.message || '').trim();\nconst userId = body.userId || ('anon-' + Date.now());\nconst channel = body.channel || 'web';\nconst intent = body.intent || 'triage_intro';\nconst phqScore = Number(body.phqScore) || 0;\nconst gadScore = Number(body.gadScore) || 0;\nconst userContext = body.userContext || message;\nconst riskLevel = body.riskLevel || 'moderate';\nconst CRISIS_KEYWORDS = ['suicide','kill myself','end my life','want to die',\"can't go on\",'cant go on','no point living','self harm','hurt myself','overdose','not worth living','ending it'];\nconst isCrisis = CRISIS_KEYWORDS.some(kw => message.toLowerCase().includes(kw));\nreturn [{ json: { userId, message, channel, intent, phqScore, gadScore, userContext, riskLevel, isCrisis, timestamp: new Date().toISOString() } }];"
+      },
+      "id": "node-002", "name": "Parse & Crisis Check", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "conditions": { "options": { "caseSensitive": false, "typeValidation": "strict" }, "conditions": [{ "id": "cond-001", "leftValue": "={{ $json.isCrisis }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }], "combinator": "and" },
         "options": {}
       },
-      "id": "webhook-trigger",
-      "name": "🌿 Webhook Trigger",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [240, 200],
-      "notes": "Receives POST from your app OR WhatsApp Cloud API. Body: { userId, message, channel }"
+      "id": "node-003", "name": "Crisis Gate", "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [620, 300]
     },
     {
       "parameters": {
         "rules": {
           "values": [
-            {
-              "conditions": {
-                "options": { "caseSensitive": false },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.body.channel }}",
-                    "rightValue": "whatsapp",
-                    "operator": { "type": "string", "operation": "equals" }
-                  }
-                ]
-              },
-              "renameOutput": true,
-              "outputKey": "WhatsApp"
-            },
-            {
-              "conditions": {
-                "options": { "caseSensitive": false },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.body.channel }}",
-                    "rightValue": "web",
-                    "operator": { "type": "string", "operation": "equals" }
-                  }
-                ]
-              },
-              "renameOutput": true,
-              "outputKey": "Web App"
-            },
-            {
-              "conditions": {
-                "options": { "caseSensitive": false },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.body.channel }}",
-                    "rightValue": "sms",
-                    "operator": { "type": "string", "operation": "equals" }
-                  }
-                ]
-              },
-              "renameOutput": true,
-              "outputKey": "SMS"
-            }
+            { "conditions": { "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "analyse_results", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "analyse_results" },
+            { "conditions": { "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "triage_intro", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "triage_intro" },
+            { "conditions": { "conditions": [{ "leftValue": "={{ $json.intent }}", "rightValue": "free_text", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "free_text" }
           ]
         },
         "options": {}
       },
-      "id": "router",
-      "name": "📡 Channel Router",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3,
-      "position": [460, 200],
-      "notes": "Routes by channel: whatsapp / web / sms"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Crisis keyword detection — runs BEFORE any AI agent\nconst message = $input.first().json.body.message || '';\nconst userId = $input.first().json.body.userId || 'anonymous';\nconst channel = $input.first().json.body.channel || 'web';\n\nconst CRISIS_KEYWORDS = [\n  'suicide', 'kill myself', 'end my life', 'want to die',\n  'cant go on', \"can't go on\", 'no point living', 'self harm',\n  'hurt myself', 'overdose', 'not worth living'\n];\n\nconst isCrisis = CRISIS_KEYWORDS.some(kw =>\n  message.toLowerCase().includes(kw)\n);\n\nreturn [{\n  json: {\n    userId,\n    message,\n    channel,\n    isCrisis,\n    timestamp: new Date().toISOString()\n  }\n}];"
-      },
-      "id": "crisis-check",
-      "name": "🚨 Crisis Keyword Detector",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [680, 200],
-      "notes": "Checks message for crisis keywords BEFORE calling AI. Fast, no API cost."
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": { "caseSensitive": false },
-          "conditions": [
-            {
-              "leftValue": "={{ $json.isCrisis }}",
-              "rightValue": true,
-              "operator": { "type": "boolean", "operation": "equals" }
-            }
-          ]
-        }
-      },
-      "id": "crisis-gate",
-      "name": "Crisis gate",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [900, 200],
-      "notes": "True → Crisis Agent path. False → Normal triage path."
+      "id": "node-004", "name": "Intent Router", "type": "n8n-nodes-base.switch", "typeVersion": 3, "position": [840, 420]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpQueryAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "json",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true, "contentType": "json",
         "body": {
-          "system_instruction": {
-            "parts": [{
-              "text": "You are MindBridge's crisis support agent. A user has expressed thoughts that may indicate a mental health crisis. Respond with extreme compassion, validate their feelings, and immediately provide the message: 'Please reach out to a crisis helpline right now. You are not alone.' Keep your response under 3 sentences. Never minimise their pain."
-            }]
-          },
-          "contents": [{
-            "role": "user",
-            "parts": [{ "text": "={{ $json.message }}" }]
-          }],
-          "generationConfig": {
-            "temperature": 0.4,
-            "maxOutputTokens": 200
-          }
-        }
+          "system_instruction": { "parts": [{ "text": "You are MindBridge's crisis support agent. A user has expressed thoughts that may indicate a mental health crisis. Respond with extreme compassion in exactly 2 sentences. Validate their feelings without minimising them. Always end with: 'Please reach out to a crisis helpline right now — you are not alone. Find your country helpline in our Global Directory tab.'" }] },
+          "contents": [{ "role": "user", "parts": [{ "text": "={{ $json.message }}" }] }],
+          "generationConfig": { "temperature": 0.3, "maxOutputTokens": 200 }
+        },
+        "options": {}
       },
-      "id": "crisis-agent",
-      "name": "🆘 Crisis Agent (Gemini)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1120, 80],
-      "notes": "Immediate compassionate response + escalation"
+      "id": "node-005", "name": "Crisis Agent", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [840, 140]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpQueryAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "json",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true, "contentType": "json",
         "body": {
-          "system_instruction": {
-            "parts": [{
-              "text": "You are MindBridge's triage agent. A user has reached out for a mental health check-in. Read what they shared and respond warmly and personally in 2-3 sentences. Acknowledge exactly what they said. End by saying you will ask them 4 short questions. Never be clinical or generic."
-            }]
-          },
-          "contents": [{
-            "role": "user",
-            "parts": [{ "text": "={{ $json.message }}" }]
-          }],
-          "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": 200
-          }
-        }
+          "system_instruction": { "parts": [{ "text": "You are MindBridge's compassionate triage agent. A user has reached out for a mental health check-in. Read exactly what they shared and respond warmly and personally in 2-3 sentences only. Reference their exact words. End by saying you will ask them 4 short questions about how they have been feeling over the past 2 weeks. Never be clinical or generic. Never diagnose." }] },
+          "contents": [{ "role": "user", "parts": [{ "text": "={{ $json.message }}" }] }],
+          "generationConfig": { "temperature": 0.7, "maxOutputTokens": 200 }
+        },
+        "options": {}
       },
-      "id": "triage-agent",
-      "name": "💬 Triage Agent (Gemini)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1120, 320],
-      "notes": "Personalised warm welcome. Called first when user starts screening."
+      "id": "node-006", "name": "Triage Agent", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1060, 500]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpQueryAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "json",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true, "contentType": "json",
         "body": {
-          "system_instruction": {
-            "parts": [{
-              "text": "You are MindBridge's clinical risk analysis agent. You receive PHQ-2 and GAD-2 scores plus the user's own words. Return ONLY valid JSON with this exact structure: { \"riskLevel\": \"low\"|\"moderate\"|\"high\", \"riskTitle\": \"max 6 words\", \"riskIcon\": \"emoji\", \"personalMessage\": \"2-3 sentences referencing their specific answers\", \"keyInsight\": \"one sentence pattern observation\" }. Be compassionate and specific. Never be generic."
-            }]
-          },
-          "contents": [{
-            "role": "user",
-            "parts": [{
-              "text": "=PHQ-2 score: {{ $json.body.phqScore }}/6\nGAD-2 score: {{ $json.body.gadScore }}/6\nTotal: {{ $json.body.phqScore + $json.body.gadScore }}/12\nUser context: \"{{ $json.body.userContext }}\""
-            }]
-          }],
-          "generationConfig": {
-            "temperature": 0.5,
-            "maxOutputTokens": 300
-          }
-        }
+          "system_instruction": { "parts": [{ "text": "You are MindBridge's clinical risk analysis agent. You receive PHQ-2 and GAD-2 scores plus the user's own words. Respond ONLY with valid JSON — no markdown, no backticks, no explanation, just raw JSON. Use this exact structure: {\"riskLevel\": \"low\" or \"moderate\" or \"high\", \"riskTitle\": \"max 6 words\", \"riskIcon\": \"single emoji\", \"personalMessage\": \"2-3 sentences referencing their specific words\", \"keyInsight\": \"one sentence about the main pattern\"}. riskLevel must match: 0-2 = low, 3-5 = moderate, 6+ = high." }] },
+          "contents": [{ "role": "user", "parts": [{ "text": "=PHQ-2 score: {{ $('Parse & Crisis Check').first().json.phqScore }}/6\nGAD-2 score: {{ $('Parse & Crisis Check').first().json.gadScore }}/6\nTotal: {{ $('Parse & Crisis Check').first().json.phqScore + $('Parse & Crisis Check').first().json.gadScore }}/12\nUser said: \"{{ $('Parse & Crisis Check').first().json.userContext }}\"" }] }],
+          "generationConfig": { "temperature": 0.5, "maxOutputTokens": 350 }
+        },
+        "options": {}
       },
-      "id": "risk-agent",
-      "name": "🧠 Risk Agent (Gemini)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1120, 480],
-      "notes": "Takes PHQ-2 + GAD-2 scores + user context → personalised risk analysis JSON"
+      "id": "node-007", "name": "Risk Agent", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1060, 320]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpQueryAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "json",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true, "contentType": "json",
         "body": {
-          "system_instruction": {
-            "parts": [{
-              "text": "You are MindBridge's care navigation agent. Based on screening results, generate exactly 3 personalised, actionable next steps as a JSON array of 3 strings. Reference the user's specific situation. Max 20 words each. For high risk: step 1 must be a crisis helpline. For moderate: include a GP visit. For low: focus on maintaining wellbeing."
-            }]
-          },
-          "contents": [{
-            "role": "user",
-            "parts": [{
-              "text": "=Risk level: {{ $json.body.riskLevel }}\nPHQ-2: {{ $json.body.phqScore }}/6\nGAD-2: {{ $json.body.gadScore }}/6\nUser context: \"{{ $json.body.userContext }}\"\nReturn JSON array of 3 strings."
-            }]
-          }],
-          "generationConfig": {
-            "temperature": 0.6,
-            "maxOutputTokens": 250
-          }
-        }
+          "system_instruction": { "parts": [{ "text": "You are MindBridge's care navigation agent. Generate exactly 3 personalised next steps. Respond ONLY with a JSON array of exactly 3 strings — no markdown, no backticks, just raw JSON array. Each step max 20 words. For high risk: step 1 must direct to crisis helpline. For moderate: include a GP visit. For low: focus on maintaining wellbeing. Reference the user's specific situation." }] },
+          "contents": [{ "role": "user", "parts": [{ "text": "=Risk: {{ $('Parse & Crisis Check').first().json.riskLevel }}\nPHQ-2: {{ $('Parse & Crisis Check').first().json.phqScore }}/6\nGAD-2: {{ $('Parse & Crisis Check').first().json.gadScore }}/6\nContext: \"{{ $('Parse & Crisis Check').first().json.userContext }}\"\nReturn a JSON array of exactly 3 strings." }] }],
+          "generationConfig": { "temperature": 0.6, "maxOutputTokens": 250 }
+        },
+        "options": {}
       },
-      "id": "care-navigator",
-      "name": "🗺️ CareNavigator Agent (Gemini)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [1120, 640],
-      "notes": "Generates 3 personalised next steps based on risk + context"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Parse all agent responses and bundle into one clean object\nconst items = $input.all();\n\n// Get the risk agent response\nconst riskRaw = items[0]?.json?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nlet riskData = {};\ntry {\n  const cleaned = riskRaw.replace(/```json|```/g, '').trim();\n  riskData = JSON.parse(cleaned);\n} catch (e) {\n  riskData = { riskLevel: 'moderate', riskTitle: 'Some Signs of Distress', riskIcon: '🌤️', personalMessage: 'Your responses show some signs worth paying attention to.', keyInsight: '' };\n}\n\n// Get the care navigator response\nconst stepsRaw = items[1]?.json?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';\nlet steps = [];\ntry {\n  const cleaned = stepsRaw.replace(/```json|```/g, '').trim();\n  steps = JSON.parse(cleaned);\n} catch (e) {\n  steps = ['Speak with your GP this week', 'Try the breathing exercise in our Resources', 'Check in again in 7 days'];\n}\n\nreturn [{\n  json: {\n    riskLevel: riskData.riskLevel || 'moderate',\n    riskTitle: riskData.riskTitle || 'Check In With Someone',\n    riskIcon: riskData.riskIcon || '🌤️',\n    personalMessage: riskData.personalMessage || '',\n    keyInsight: riskData.keyInsight || '',\n    nextSteps: steps,\n    timestamp: new Date().toISOString(),\n    screeningComplete: true\n  }\n}];"
-      },
-      "id": "merge-results",
-      "name": "📦 Merge + Parse Results",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1340, 560],
-      "notes": "Parses JSON from Risk Agent + CareNavigator, bundles into clean response"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Store anonymised screening result\nconst result = $input.first().json;\nconst userId = $('crisis-check').first().json.userId;\n\n// This would write to your database (Supabase / Airtable / Postgres)\n// For now logs the anonymised record\nconsole.log('Screening stored:', {\n  anonymousId: userId,\n  riskLevel: result.riskLevel,\n  timestamp: result.timestamp\n  // Never store message content — privacy first\n});\n\nreturn [{ json: { ...result, stored: true } }];"
-      },
-      "id": "store-result",
-      "name": "💾 Store to DB (anonymised)",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [1560, 480],
-      "notes": "Writes anonymised risk level + timestamp to DB. Never stores message text."
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}"
-      },
-      "id": "respond",
-      "name": "✅ Respond to App",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [1780, 480],
-      "notes": "Returns full result JSON to your Lovable/React app"
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [{ "field": "days", "daysInterval": 7 }]
-        }
-      },
-      "id": "followup-cron",
-      "name": "⏰ 7-day Follow-Up Cron",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [240, 700],
-      "notes": "Fires every day, checks DB for patients due a 7-day follow-up"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Fetch patients due for follow-up from your DB\n// In production: query Supabase/Airtable for users where\n// lastScreening was 7, 30, or 90 days ago\n\n// Mock data for demo:\nreturn [\n  { json: { userId: 'anon-001', daysSince: 7, lastRisk: 'moderate', channel: 'whatsapp' } },\n  { json: { userId: 'anon-002', daysSince: 7, lastRisk: 'high', channel: 'sms' } }\n];"
-      },
-      "id": "fetch-due",
-      "name": "📋 Fetch Patients Due",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [460, 700],
-      "notes": "Queries DB for patients due a check-in today"
+      "id": "node-008", "name": "CareNavigator Agent", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1280, 320]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpQueryAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            { "name": "key", "value": "={{ $env.GEMINI_API_KEY }}" }
-          ]
-        },
-        "sendBody": true,
-        "contentType": "json",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true, "contentType": "json",
         "body": {
-          "system_instruction": {
-            "parts": [{
-              "text": "You are MindBridge's follow-up agent. Write a warm, brief (2 sentences max) check-in message for someone who screened as {{ $json.lastRisk }} risk 7 days ago. Invite them to do a quick re-screening. Be gentle and human, never clinical."
-            }]
-          },
-          "contents": [{
-            "role": "user",
-            "parts": [{ "text": "Generate a 7-day follow-up message for a {{ $json.lastRisk }}-risk patient." }]
-          }],
-          "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": 100
-          }
-        }
+          "system_instruction": { "parts": [{ "text": "You are MindBridge's empathetic support agent. A user typed a free-form message during their mental health check-in. Respond warmly in 2-3 sentences. Acknowledge exactly what they said. If they mention crisis or suicidal thoughts, gently direct them to find their country helpline in the Global Directory tab. Never diagnose. Never give generic responses." }] },
+          "contents": [{ "role": "user", "parts": [{ "text": "={{ $json.message }}" }] }],
+          "generationConfig": { "temperature": 0.7, "maxOutputTokens": 200 }
+        },
+        "options": {}
       },
-      "id": "followup-agent",
-      "name": "📲 FollowUp Agent (Gemini)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [700, 700],
-      "notes": "Generates personalised follow-up message per patient"
+      "id": "node-009", "name": "FreeText Agent", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [1060, 680]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendBody": true, "contentType": "json",
+        "body": {
+          "system_instruction": { "parts": [{ "text": "You are MindBridge's follow-up agent. Write a warm, brief check-in message in exactly 2 sentences for someone who screened at the given risk level 7 days ago. Invite them back gently to do a quick re-screening. Be human and caring, never clinical." }] },
+          "contents": [{ "role": "user", "parts": [{ "text": "=Generate a 7-day follow-up message for a {{ $json.lastRisk }}-risk patient." }] }],
+          "generationConfig": { "temperature": 0.7, "maxOutputTokens": 120 }
+        },
+        "options": {}
+      },
+      "id": "node-010", "name": "FollowUp Agent", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [840, 840]
+    },
+    {
+      "parameters": { "jsCode": "const raw = $('Crisis Agent').first().json?.candidates?.[0]?.content?.parts?.[0]?.text || 'Please reach out to a crisis helpline immediately. You are not alone — find your country helpline in the Global Directory tab.';\nreturn [{ json: { isCrisis: true, intent: 'crisis', response: raw, message: raw, riskLevel: 'high', riskTitle: 'Please Seek Help Now', riskIcon: '🆘', nextSteps: ['Call a crisis helpline right now — find your country number in the Global Directory tab', 'Tell someone you trust exactly how you are feeling right now', 'Go to your nearest emergency department if you feel unsafe'], timestamp: new Date().toISOString() } }];" },
+      "id": "node-011", "name": "Format Crisis Response", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1060, 140]
+    },
+    {
+      "parameters": { "jsCode": "const text = $('Triage Agent').first().json?.candidates?.[0]?.content?.parts?.[0]?.text || 'Thank you for sharing that with me. I hear you, and I am here. Let me ask you 4 short questions about how you have been feeling. 🌿';\nreturn [{ json: { intent: 'triage_intro', triageResponse: text, message: text, timestamp: new Date().toISOString() } }];" },
+      "id": "node-012", "name": "Format Triage Response", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1280, 500]
+    },
+    {
+      "parameters": { "jsCode": "const riskRaw = $('Risk Agent').first().json?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\nlet riskData = {};\ntry { riskData = JSON.parse(riskRaw.replace(/```json|```/g, '').trim()); } catch(e) { const total = $('Parse & Crisis Check').first().json.phqScore + $('Parse & Crisis Check').first().json.gadScore; const lvl = total <= 2 ? 'low' : total <= 5 ? 'moderate' : 'high'; riskData = { riskLevel: lvl, riskTitle: lvl === 'low' ? 'Coping Well' : lvl === 'moderate' ? 'Some Signs of Distress' : 'Please Seek Support', riskIcon: lvl === 'low' ? '🌱' : lvl === 'moderate' ? '🌤️' : '⚡', personalMessage: 'Your responses have been recorded. Please follow the recommended next steps.', keyInsight: '' }; }\nconst stepsRaw = $('CareNavigator Agent').first().json?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';\nlet steps = [];\ntry { const parsed = JSON.parse(stepsRaw.replace(/```json|```/g, '').trim()); steps = Array.isArray(parsed) ? parsed : []; } catch(e) { steps = []; }\nwhile (steps.length < 3) { steps.push('Continue monitoring your wellbeing and reach out to a healthcare provider if needed'); }\nreturn [{ json: { intent: 'analyse_results', riskLevel: riskData.riskLevel || 'moderate', riskTitle: riskData.riskTitle || 'Check In With Someone', riskIcon: riskData.riskIcon || '🌤️', personalMessage: riskData.personalMessage || '', keyInsight: riskData.keyInsight || '', nextSteps: steps.slice(0, 3), phqScore: $('Parse & Crisis Check').first().json.phqScore, gadScore: $('Parse & Crisis Check').first().json.gadScore, screeningComplete: true, timestamp: new Date().toISOString() } }];" },
+      "id": "node-013", "name": "Merge Results", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1500, 320]
+    },
+    {
+      "parameters": { "jsCode": "const text = $('FreeText Agent').first().json?.candidates?.[0]?.content?.parts?.[0]?.text || 'Thank you for sharing that. I am here with you. Please continue when you are ready. 🌿';\nreturn [{ json: { intent: 'free_text', response: text, message: text, timestamp: new Date().toISOString() } }];" },
+      "id": "node-014", "name": "Format FreeText Response", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1280, 680]
+    },
+    {
+      "parameters": { "jsCode": "const data = $input.first().json;\nconst parsed = $('Parse & Crisis Check').first().json;\nconst record = { anonymousId: parsed.userId, riskLevel: data.riskLevel || 'unknown', phqScore: data.phqScore || 0, gadScore: data.gadScore || 0, channel: parsed.channel, followUpDue: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), timestamp: new Date().toISOString() };\nconsole.log('SCREENING STORED:', JSON.stringify(record));\nreturn [{ json: { ...data, stored: true, followUpScheduled: true } }];" },
+      "id": "node-015", "name": "Store Screening Result", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1720, 320]
+    },
+    {
+      "parameters": { "jsCode": "const parsed = $('Parse & Crisis Check').first().json;\nconst record = { anonymousId: parsed.userId, eventType: 'crisis_detected', channel: parsed.channel, timestamp: new Date().toISOString() };\nconsole.log('CRISIS EVENT LOGGED:', JSON.stringify(record));\nreturn [{ json: { ...$input.first().json, crisisLogged: true } }];" },
+      "id": "node-016", "name": "Store Crisis Event", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1280, 140]
+    },
+    {
+      "parameters": { "jsCode": "const text = $('FollowUp Agent').first().json?.candidates?.[0]?.content?.parts?.[0]?.text || 'Hi, just checking in — how have you been feeling since your last MindBridge screening? We are here for you whenever you are ready. 🌿';\nconst patient = $('Fetch Patients Due').first().json;\nconsole.log('FOLLOW-UP QUEUED:', { userId: patient.userId, message: text });\nreturn [{ json: { userId: patient.userId, lastRisk: patient.lastRisk, followUpMessage: text, status: 'queued', deliveryChannel: patient.channel || 'web', scheduledAt: new Date().toISOString() } }];" },
+      "id": "node-017", "name": "Format FollowUp Response", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [1060, 840]
+    },
+    {
+      "parameters": {
+        "respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}",
+        "options": { "responseHeaders": { "entries": [{ "name": "Content-Type", "value": "application/json" }, { "name": "Access-Control-Allow-Origin", "value": "*" }] } }
+      },
+      "id": "node-018", "name": "Respond to App", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [1940, 320]
+    },
+    {
+      "parameters": { "rule": { "interval": [{ "field": "days", "daysInterval": 1 }] } },
+      "id": "node-019", "name": "7-day Follow-Up Cron", "type": "n8n-nodes-base.scheduleTrigger", "typeVersion": 1.2, "position": [180, 840]
+    },
+    {
+      "parameters": { "jsCode": "return [\n  { json: { userId: 'anon-001', daysSince: 7,  lastRisk: 'moderate', channel: 'web' } },\n  { json: { userId: 'anon-002', daysSince: 7,  lastRisk: 'high',     channel: 'web' } },\n  { json: { userId: 'anon-003', daysSince: 30, lastRisk: 'low',      channel: 'web' } }\n];" },
+      "id": "node-020", "name": "Fetch Patients Due", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [400, 840]
     }
   ],
   "connections": {
-    "🌿 Webhook Trigger": {
-      "main": [[{ "node": "📡 Channel Router", "type": "main", "index": 0 }]]
-    },
-    "📡 Channel Router": {
-      "main": [
-        [{ "node": "🚨 Crisis Keyword Detector", "type": "main", "index": 0 }],
-        [{ "node": "🚨 Crisis Keyword Detector", "type": "main", "index": 0 }],
-        [{ "node": "🚨 Crisis Keyword Detector", "type": "main", "index": 0 }]
-      ]
-    },
-    "🚨 Crisis Keyword Detector": {
-      "main": [[{ "node": "Crisis gate", "type": "main", "index": 0 }]]
-    },
-    "Crisis gate": {
-      "main": [
-        [{ "node": "🆘 Crisis Agent (Gemini)", "type": "main", "index": 0 }],
-        [{ "node": "💬 Triage Agent (Gemini)", "type": "main", "index": 0 }]
-      ]
-    },
-    "💬 Triage Agent (Gemini)": {
-      "main": [[{ "node": "🧠 Risk Agent (Gemini)", "type": "main", "index": 0 }]]
-    },
-    "🧠 Risk Agent (Gemini)": {
-      "main": [[{ "node": "🗺️ CareNavigator Agent (Gemini)", "type": "main", "index": 0 }]]
-    },
-    "🗺️ CareNavigator Agent (Gemini)": {
-      "main": [[{ "node": "📦 Merge + Parse Results", "type": "main", "index": 0 }]]
-    },
-    "📦 Merge + Parse Results": {
-      "main": [[{ "node": "💾 Store to DB (anonymised)", "type": "main", "index": 0 }]]
-    },
-    "💾 Store to DB (anonymised)": {
-      "main": [[{ "node": "✅ Respond to App", "type": "main", "index": 0 }]]
-    },
-    "⏰ 7-day Follow-Up Cron": {
-      "main": [[{ "node": "📋 Fetch Patients Due", "type": "main", "index": 0 }]]
-    },
-    "📋 Fetch Patients Due": {
-      "main": [[{ "node": "📲 FollowUp Agent (Gemini)", "type": "main", "index": 0 }]]
-    }
+    "Webhook Trigger":        { "main": [[{ "node": "Parse & Crisis Check",    "type": "main", "index": 0 }]] },
+    "Parse & Crisis Check":   { "main": [[{ "node": "Crisis Gate",             "type": "main", "index": 0 }]] },
+    "Crisis Gate":            { "main": [[{ "node": "Crisis Agent",            "type": "main", "index": 0 }], [{ "node": "Intent Router",          "type": "main", "index": 0 }]] },
+    "Intent Router":          { "main": [[{ "node": "Risk Agent",              "type": "main", "index": 0 }], [{ "node": "Triage Agent",            "type": "main", "index": 0 }], [{ "node": "FreeText Agent",          "type": "main", "index": 0 }]] },
+    "Crisis Agent":           { "main": [[{ "node": "Format Crisis Response",  "type": "main", "index": 0 }]] },
+    "Format Crisis Response": { "main": [[{ "node": "Store Crisis Event",      "type": "main", "index": 0 }]] },
+    "Store Crisis Event":     { "main": [[{ "node": "Respond to App",          "type": "main", "index": 0 }]] },
+    "Triage Agent":           { "main": [[{ "node": "Format Triage Response",  "type": "main", "index": 0 }]] },
+    "Format Triage Response": { "main": [[{ "node": "Respond to App",          "type": "main", "index": 0 }]] },
+    "Risk Agent":             { "main": [[{ "node": "CareNavigator Agent",     "type": "main", "index": 0 }]] },
+    "CareNavigator Agent":    { "main": [[{ "node": "Merge Results",           "type": "main", "index": 0 }]] },
+    "Merge Results":          { "main": [[{ "node": "Store Screening Result",  "type": "main", "index": 0 }]] },
+    "Store Screening Result": { "main": [[{ "node": "Respond to App",          "type": "main", "index": 0 }]] },
+    "FreeText Agent":         { "main": [[{ "node": "Format FreeText Response","type": "main", "index": 0 }]] },
+    "Format FreeText Response":{ "main": [[{ "node": "Respond to App",         "type": "main", "index": 0 }]] },
+    "7-day Follow-Up Cron":   { "main": [[{ "node": "Fetch Patients Due",      "type": "main", "index": 0 }]] },
+    "Fetch Patients Due":     { "main": [[{ "node": "FollowUp Agent",          "type": "main", "index": 0 }]] },
+    "FollowUp Agent":         { "main": [[{ "node": "Format FollowUp Response","type": "main", "index": 0 }]] }
   },
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "mindbridge-hackathon-2026"
-  }
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "callerPolicy": "workflowsFromSameOwner" },
+  "staticData": null,
+  "meta": { "templateCredsSetupCompleted": false },
+  "pinData": {}
 }

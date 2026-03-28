@@ -39,7 +39,7 @@ export default function AdminDashboard() {
           >
             <LayoutTemplate size={16} /> System Specs & Docs
           </button>
-          <button className="bg-[#2d5a30] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm hover:bg-[#234726] transition-colors">
+          <button className="bg-[#4a7c59] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm hover:bg-[#234726] transition-colors">
             <Download size={16} /> Export Reports
           </button>
         </div>
@@ -51,10 +51,10 @@ export default function AdminDashboard() {
         animate="show"
         className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12"
       >
-        <KpiCard icon={<Users size={20} />} num="12,492" label="Total Active Users" delta="↑ 1,204" up color="bg-[#e3f2fd]" textColor="text-[#1565c0]" />
-        <KpiCard icon={<Building2 size={20} />} num="84" label="Partner Clinics" delta="↑ 3" up color="bg-[#f3e5f5]" textColor="text-[#7b1fa2]" />
-        <KpiCard icon={<Activity size={20} />} num="45,921" label="Total Screenings" delta="↑ 8,402" up color="bg-[#e8f5e9]" textColor="text-[#2e7d32]" />
-        <KpiCard icon={<AlertTriangle size={20} />} num="2" label="System Alerts" delta="↓ 1" up={false} color="bg-[#ffebee]" textColor="text-[#c62828]" />
+        <KpiCard icon={<Users size={20} />} num="2,847" label="Total Active Users" delta="↑ 312 this week" up color="bg-[#e3f2fd]" textColor="text-[#1565c0]" />
+        <KpiCard icon={<Building2 size={20} />} num="12" label="Partner Clinics" delta="↑ 2 this month" up color="bg-[#f3e5f5]" textColor="text-[#7b1fa2]" />
+        <KpiCard icon={<Activity size={20} />} num="8,492" label="Total Screenings" delta="↑ 1,204 this week" up color="bg-[#e8f5e9]" textColor="text-[#2e7d32]" />
+        <KpiCard icon={<AlertTriangle size={20} />} num="0" label="System Alerts" delta="All systems normal" up={true} color="bg-[#e8f5e9]" textColor="text-[#2e7d32]" />
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

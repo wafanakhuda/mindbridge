@@ -54,7 +54,7 @@ export default function Directory() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                filter === f ? 'bg-[#2d5a30] text-white shadow-sm' : 'text-[#6b7265] hover:text-[#2c3028]'
+                filter === f ? 'bg-[#4a7c59] text-white shadow-sm' : 'text-[#6b7265] hover:text-[#2c3028]'
               }`}
             >
               {f === 'all' ? 'All' : f === 'hotline' ? '✅ Hotline' : '🆘 Emergency'}
