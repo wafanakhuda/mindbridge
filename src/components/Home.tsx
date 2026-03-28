@@ -79,13 +79,13 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
       </div>
 
       {/* WHO Global Stats Bar */}
-      <div className="bg-white border-b border-[#d8d0c4] py-6 px-6">
+      <div className="bg-white border-b border-[#d8d0c4] py-8 px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { num: '1 in 7', label: 'people live with mental illness', src: 'WHO, 2025' },
-            { num: '1B+', label: 'people affected globally', src: 'WHO, 2025' },
-            { num: '2 in 3', label: 'receive no care at all', src: 'WHO, 2025' },
-            { num: '195', label: 'countries in our directory', src: 'MindBridge' },
+            { num: '1B+',    label: 'people affected globally',        src: 'WHO, 2025' },
+            { num: '2 in 3', label: 'receive no care at all',          src: 'WHO, 2025' },
+            { num: '195',    label: 'countries in our directory',       src: 'MindBridge' },
           ].map((s) => (
             <div key={s.num}>
               <div className="font-serif text-3xl md:text-4xl font-bold text-[#4a7c59]">{s.num}</div>
@@ -97,44 +97,46 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
       </div>
 
       {/* Care Pathway Banner */}
-      <div className="relative z-20 -mt-16 max-w-6xl mx-auto px-6 mb-16">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-100px" }}
-          className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-2xl rounded-3xl overflow-hidden p-6 md:p-8"
-        >
-          <div className="text-center mb-6">
-            <p className="text-sm font-semibold text-[#6b7265] uppercase tracking-widest mb-2">The MindBridge Care Pathway</p>
-            <p className="text-[#2c3028] font-serif text-xl italic">"This is not because care does not exist. It is because the pathway to care is broken." — WHO, 2025</p>
-          </div>
-          <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-0">
-            {[
-              { icon: '📱', step: '1', title: 'Community Screening', desc: 'Anonymous AI triage via app or WhatsApp', color: 'bg-[#e8f5e9] border-[#c8e6c9] text-[#2e7d32]' },
-              { icon: '🏥', step: '2', title: 'Primary Care Link', desc: 'Risk-based referral to local clinics', color: 'bg-[#e3f2fd] border-[#bbdefb] text-[#1565c0]' },
-              { icon: '📲', step: '3', title: 'Structured Follow-Up', desc: '7, 30 & 90-day automated check-ins', color: 'bg-[#fff8e1] border-[#ffe082] text-[#f57f17]' },
-            ].map((s, i) => (
-              <div key={s.step} className="flex items-center gap-2 w-full md:w-auto">
-                <div className={`flex-1 md:w-56 border-2 ${s.color} rounded-2xl p-4 text-center`}>
-                  <div className="text-2xl mb-1">{s.icon}</div>
-                  <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${s.color.split(' ')[2]}`}>Step {s.step}</div>
-                  <div className="font-bold text-[#2c3028] text-sm">{s.title}</div>
-                  <div className="text-xs text-[#6b7265] mt-1">{s.desc}</div>
+      <div className="bg-[#f7f3ed] py-12 px-6">
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="bg-white border border-[#d8d0c4] shadow-lg rounded-3xl overflow-hidden p-8"
+          >
+            <div className="text-center mb-8">
+              <span className="inline-block bg-[#e8f5e9] text-[#4a7c59] text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#c8e6c9] mb-3">The MindBridge Care Pathway</span>
+              <p className="text-[#2c3028] font-serif text-lg md:text-xl italic max-w-2xl mx-auto">"This is not because care does not exist. It is because the pathway to care is broken." — WHO, 2025</p>
+            </div>
+            <div className="flex flex-col md:flex-row items-stretch justify-center gap-3 md:gap-0 mb-8">
+              {[
+                { icon: '📱', step: '1', title: 'Community Screening', desc: 'Anonymous PHQ-2 & GAD-2 triage via app', color: 'bg-[#e8f5e9] border-[#c8e6c9]', text: 'text-[#2e7d32]' },
+                { icon: '🏥', step: '2', title: 'Primary Care Link',    desc: 'Risk-based referral to local clinics',     color: 'bg-[#e3f2fd] border-[#bbdefb]', text: 'text-[#1565c0]' },
+                { icon: '📲', step: '3', title: 'Structured Follow-Up', desc: '7, 30 & 90-day automated check-ins',       color: 'bg-[#fff8e1] border-[#ffe082]', text: 'text-[#f57f17]' },
+              ].map((s, i) => (
+                <div key={s.step} className="flex md:flex-row items-center gap-3 flex-1">
+                  <div className={`flex-1 border-2 ${s.color} rounded-2xl p-5 text-center`}>
+                    <div className="text-3xl mb-2">{s.icon}</div>
+                    <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${s.text}`}>Step {s.step}</div>
+                    <div className="font-bold text-[#2c3028] text-sm">{s.title}</div>
+                    <div className="text-xs text-[#6b7265] mt-1 leading-relaxed">{s.desc}</div>
+                  </div>
+                  {i < 2 && <div className="text-xl text-[#d8d0c4] font-bold shrink-0 hidden md:block">→</div>}
                 </div>
-                {i < 2 && <div className="text-2xl text-[#d8d0c4] font-bold hidden md:block mx-2">→</div>}
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-6">
-            <button
-              onClick={() => setTab('screening')}
-              className="bg-[#d4843a] text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-[#c07030] transition-all hover:shadow-xl hover:-translate-y-0.5"
-            >
-              Start Free Screening →
-            </button>
-          </div>
-        </motion.div>
+              ))}
+            </div>
+            <div className="text-center">
+              <button
+                onClick={() => setTab('screening')}
+                className="bg-[#d4843a] text-white px-10 py-3.5 rounded-full font-bold shadow-lg hover:bg-[#c07030] transition-all hover:shadow-xl hover:-translate-y-0.5 text-base"
+              >
+                Start Free Screening
+              </button>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
       {/* Features Section */}

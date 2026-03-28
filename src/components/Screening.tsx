@@ -1,8 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Disclaimer from './Disclaimer';
-import { MessageCircle, Send, RefreshCw, ArrowRight, Sparkles, Bot } from 'lucide-react';
-import { TriageAgent, RiskAgent, CareNavigatorAgent, FreeTextAgent, type RiskAnalysis } from '../agents/gemini';
+import { MessageCircle, Send, RefreshCw, ArrowRight, Sparkles, Bot, ClipboardPaste, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+import { TriageAgent, RiskAgent, CareNavigatorAgent, TherapyAgent, FollowUpAgent, FreeTextAgent, type RiskAnalysis, type TherapyIntervention } from '../agents/gemini';
+
+const CHATGPT_PROMPT = `Please summarise my mental health history from our conversations. Include:
+1. Main concerns and symptoms I have mentioned (anxiety, depression, stress, sleep issues, etc.)
+2. How long I have been experiencing these issues
+3. Any triggers or difficult situations I have described
+4. Coping strategies I have tried or mentioned
+5. Any significant life events or stressors I shared
+6. How my mood or symptoms have changed over time
+
+Please be concise and clinical — this summary will be used by a mental health screening tool to give me more accurate, personalised results. Do not include any advice, just summarise what I have shared with you.`;
 
 const PHQ_QUESTIONS = [
   "Over the last 2 weeks, how often have you been bothered by **little interest or pleasure in doing things**?",
@@ -31,6 +41,10 @@ export default function Screening({ setTab }: { setTab?: (tab: string) => void }
   const [freeText, setFreeText] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [currentOptions, setCurrentOptions] = useState<any[]>([]);
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  const [historyText, setHistoryText] = useState('');
+  const [historyCopied, setHistoryCopied] = useState(false);
+  const [historySubmitted, setHistorySubmitted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -76,7 +90,10 @@ export default function Screening({ setTab }: { setTab?: (tab: string) => void }
     await showTyping(800);
 
     try {
-      const aiResponse = await TriageAgent(option);
+      const contextWithHistory = historyText
+        ? `User said: "${option}". Previous mental health history from ChatGPT: ${historyText}`
+        : option;
+      const aiResponse = await TriageAgent(contextWithHistory);
       addBotMessage(aiResponse + '\n\nLet me ask you a few short questions. 🌿');
     } catch {
       addBotMessage("Thank you for sharing that with me. 🌿\n\nLet me ask you a few short questions to better understand how you've been feeling.");
@@ -174,6 +191,88 @@ export default function Screening({ setTab }: { setTab?: (tab: string) => void }
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto px-4 py-8">
       <Disclaimer />
+
+      {/* ChatGPT History Panel */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white border border-[#d8d0c4] rounded-2xl mb-4 overflow-hidden"
+      >
+        <button
+          onClick={() => setShowHistoryPanel(!showHistoryPanel)}
+          className="w-full flex items-center justify-between p-4 text-left hover:bg-[#fdfaf4] transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#10a37f]/10 flex items-center justify-center shrink-0">
+              <span className="text-lg">🤖</span>
+            </div>
+            <div>
+              <div className="font-bold text-[#2c3028] text-sm">Have you talked to ChatGPT about your mental health?</div>
+              <div className="text-xs text-[#6b7265]">Paste your history to get a more accurate, personalised screening</div>
+            </div>
+          </div>
+          {showHistoryPanel ? <ChevronUp size={18} className="text-[#6b7265] shrink-0" /> : <ChevronDown size={18} className="text-[#6b7265] shrink-0" />}
+        </button>
+
+        <AnimatePresence>
+          {showHistoryPanel && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="border-t border-[#f0ece5] p-4 space-y-4">
+                <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4">
+                  <p className="text-sm text-[#166534] font-medium mb-3">
+                    Step 1 — Copy this prompt and paste it into ChatGPT:
+                  </p>
+                  <div className="bg-white border border-[#d1fae5] rounded-lg p-3 text-xs text-[#2c3028] font-mono leading-relaxed mb-3 whitespace-pre-wrap">
+                    {CHATGPT_PROMPT}
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(CHATGPT_PROMPT);
+                      setHistoryCopied(true);
+                      setTimeout(() => setHistoryCopied(false), 2500);
+                    }}
+                    className="flex items-center gap-2 bg-[#10a37f] text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-[#0d8a6d] transition-all"
+                  >
+                    {historyCopied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy Prompt</>}
+                  </button>
+                </div>
+
+                <div>
+                  <p className="text-sm text-[#6b7265] mb-2 font-medium">Step 2 — Paste ChatGPT's summary here:</p>
+                  <textarea
+                    value={historyText}
+                    onChange={e => setHistoryText(e.target.value)}
+                    placeholder="Paste ChatGPT's mental health summary here…"
+                    className="w-full bg-[#fdfaf4] border-2 border-[#f0ece5] rounded-xl p-3 text-sm focus:outline-none focus:border-[#7a9e7e] resize-none h-28 transition-all placeholder:text-[#a3a89f]"
+                  />
+                  <button
+                    disabled={!historyText.trim() || historySubmitted}
+                    onClick={() => {
+                      setUserContext(prev => prev + '\n\nChatGPT history summary: ' + historyText.trim());
+                      setHistorySubmitted(true);
+                      setShowHistoryPanel(false);
+                    }}
+                    className="mt-2 flex items-center gap-2 bg-[#4a7c59] disabled:bg-[#d8d0c4] text-white px-5 py-2 rounded-full text-sm font-bold transition-all"
+                  >
+                    {historySubmitted ? <><Check size={14} /> Added to screening</> : <><ClipboardPaste size={14} /> Add to my screening</>}
+                  </button>
+                </div>
+
+                {historySubmitted && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#e8f5e9] border border-[#a5d6a7] rounded-xl p-3 text-sm text-[#2d5a30] font-medium flex items-center gap-2">
+                    ✅ Your history has been added. The screening will use this for more personalised results.
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-2xl border border-white/40 flex flex-col h-[650px]">
         {/* Header */}
@@ -302,123 +401,185 @@ export default function Screening({ setTab }: { setTab?: (tab: string) => void }
 }
 
 // ─────────────────────────────────────────────
-// Results — calls RiskAgent + CareNavigatorAgent
+// ─────────────────────────────────────────────
+// Results — all 5 agents: Risk + CareNavigator + Therapy + FollowUp
 // ─────────────────────────────────────────────
 function Results({ scores, userContext, onRestart, setTab }: { scores: any; userContext: string; onRestart: () => void; setTab?: (tab: string) => void }) {
-  const [analysis, setAnalysis] = useState<RiskAnalysis | null>(null);
-  const [steps, setSteps] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [analysis, setAnalysis]       = useState<RiskAnalysis | null>(null);
+  const [steps, setSteps]             = useState<string[]>([]);
+  const [therapy, setTherapy]         = useState<TherapyIntervention | null>(null);
+  const [followUpQ, setFollowUpQ]     = useState('');
+  const [loading, setLoading]         = useState(true);
+  const [done, setDone]               = useState({ risk: false, nav: false, therapy: false, followup: false });
 
   useEffect(() => {
+    const total = scores.phq + scores.gad;
+    const rl: 'low' | 'moderate' | 'high' = total <= 2 ? 'low' : total <= 5 ? 'moderate' : 'high';
+
     const run = async () => {
-      setLoading(true);
-      const [riskResult, stepsResult] = await Promise.all([
-        RiskAgent(scores.phq, scores.gad, userContext),
-        CareNavigatorAgent(
-          scores.phq + scores.gad <= 2 ? 'low' : scores.phq + scores.gad <= 5 ? 'moderate' : 'high',
-          scores.phq, scores.gad, userContext
-        )
-      ]);
+      // Step 1: RiskAgent
+      const riskResult = await RiskAgent(scores.phq, scores.gad, userContext);
       setAnalysis(riskResult);
+      setDone(d => ({ ...d, risk: true }));
+
+      // Step 2: CareNavigator + Therapy + FollowUp in parallel
+      const [stepsResult, therapyResult, followUpResult] = await Promise.all([
+        CareNavigatorAgent(rl, scores.phq, scores.gad, userContext),
+        rl !== 'high' ? TherapyAgent(rl as 'low' | 'moderate', scores.phq, scores.gad, userContext) : Promise.resolve(null),
+        FollowUpAgent(7, rl, userContext),
+      ]);
+
       setSteps(stepsResult);
+      setDone(d => ({ ...d, nav: true }));
+
+      if (therapyResult) { setTherapy(therapyResult); setDone(d => ({ ...d, therapy: true })); }
+      setFollowUpQ(followUpResult.checkInQuestion);
+      setDone(d => ({ ...d, followup: true }));
       setLoading(false);
     };
     run();
   }, []);
 
   const risk = analysis?.riskLevel || (scores.phq + scores.gad <= 2 ? 'low' : scores.phq + scores.gad <= 5 ? 'moderate' : 'high');
-
-  const riskStyles = {
-    low: { bg: 'from-[#e8f5e9] to-[#c8e6c9] border-[#a5d6a7]', color: 'text-[#2e7d32]', dot: 'bg-[#5a8c5e]' },
+  const S = {
+    low:      { bg: 'from-[#e8f5e9] to-[#c8e6c9] border-[#a5d6a7]', color: 'text-[#2e7d32]', dot: 'bg-[#5a8c5e]' },
     moderate: { bg: 'from-[#fff8e1] to-[#ffecb3] border-[#ffe082]', color: 'text-[#f57f17]', dot: 'bg-[#c4a040]' },
-    high: { bg: 'from-[#fce4ec] to-[#f8bbd0] border-[#f48fb1]', color: 'text-[#c62828]', dot: 'bg-[#c4605a]' },
+    high:     { bg: 'from-[#fce4ec] to-[#f8bbd0] border-[#f48fb1]', color: 'text-[#c62828]', dot: 'bg-[#c4605a]' },
   };
-  const style = riskStyles[risk];
+  const style = S[risk];
+
+  const AGENTS = [
+    { name: 'RiskAgent',      sub: 'Scoring & Safety',       done: done.risk },
+    { name: 'CareNavigator',  sub: 'Logistics & Routing',    done: done.nav },
+    { name: 'TherapyAgent',   sub: 'Micro-Interventions',    done: done.therapy },
+    { name: 'FollowUpAgent',  sub: 'Retention',              done: done.followup },
+  ];
 
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }} className="max-w-3xl mx-auto px-4 py-8">
       <Disclaimer />
 
       {loading ? (
-        <div className="bg-white rounded-[2rem] p-16 text-center shadow-sm border border-[#d8d0c4]">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#e8f5e9] mb-6">
+        <div className="bg-white rounded-[2rem] p-10 text-center shadow-sm border border-[#d8d0c4]">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#e8f5e9] mb-5">
             <Sparkles size={28} className="text-[#4a7c59] animate-pulse" />
           </div>
-          <h3 className="font-serif text-2xl text-[#2c3028] mb-3">AI is analysing your responses…</h3>
-          <p className="text-[#6b7265]">Our Gemini-powered agents are personalising your results</p>
-          <div className="flex justify-center gap-2 mt-6">
-            {['TriageAgent', 'RiskAgent', 'CareNavigatorAgent'].map((a, i) => (
-              <span key={a} className="text-xs bg-[#f0ece5] text-[#6b7265] px-3 py-1 rounded-full animate-pulse" style={{ animationDelay: `${i * 300}ms` }}>
-                {a}
-              </span>
+          <h3 className="font-serif text-2xl text-[#2c3028] mb-2">Analysing your responses…</h3>
+          <p className="text-[#6b7265] text-sm mb-8">Our specialist agents are personalising your results</p>
+          <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+            {AGENTS.map(a => (
+              <div key={a.name} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium border transition-all duration-700 ${
+                a.done ? 'bg-[#e8f5e9] border-[#a5d6a7] text-[#2e7d32]' : 'bg-[#f0ece5] border-[#d8d0c4] text-[#6b7265] animate-pulse'
+              }`}>
+                <span className={`w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold ${a.done ? 'bg-[#4a7c59] text-white' : 'bg-[#d8d0c4] text-white'}`}>
+                  {a.done ? '✓' : '…'}
+                </span>
+                <div className="text-left">
+                  <div className="font-bold leading-tight">{a.name}</div>
+                  <div className="opacity-60 text-[9px]">{a.sub}</div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       ) : (
         <>
           {/* Risk Banner */}
-          <div className={`p-8 rounded-[2rem] border-2 shadow-lg text-center mb-8 relative overflow-hidden bg-gradient-to-br ${style.bg}`}>
-            <div className="absolute -right-10 -top-10 text-9xl opacity-10">{analysis?.riskIcon}</div>
+          <div className={`p-7 rounded-[2rem] border-2 shadow-lg text-center mb-5 relative overflow-hidden bg-gradient-to-br ${style.bg}`}>
+            <div className="absolute -right-8 -top-8 text-8xl opacity-10">{analysis?.riskIcon}</div>
             <div className="relative z-10">
-              <div className="text-5xl mb-4">{analysis?.riskIcon}</div>
-              <h2 className={`font-serif text-3xl font-bold mb-4 ${style.color}`}>{analysis?.riskTitle}</h2>
-              <p className="text-[#2c3028] text-lg max-w-xl mx-auto leading-relaxed">{analysis?.personalMessage}</p>
+              <div className="text-5xl mb-3">{analysis?.riskIcon}</div>
+              <div className="flex items-center justify-center gap-3 mb-3 flex-wrap">
+                <h2 className={`font-serif text-3xl font-bold ${style.color}`}>{analysis?.riskTitle}</h2>
+                {analysis?.riskScore !== undefined && (
+                  <span className={`text-sm font-bold px-3 py-1 rounded-full bg-white/60 ${style.color}`}>Score: {analysis.riskScore}/100</span>
+                )}
+              </div>
+              <p className="text-[#2c3028] text-base max-w-xl mx-auto leading-relaxed">{analysis?.personalMessage}</p>
               {analysis?.keyInsight && (
-                <div className="mt-4 inline-flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full text-sm text-[#2c3028] font-medium">
-                  <Sparkles size={14} className="text-[#d4843a]" />
-                  {analysis.keyInsight}
+                <div className="mt-3 inline-flex items-center gap-2 bg-white/60 px-4 py-1.5 rounded-full text-sm text-[#2c3028] font-medium">
+                  <Sparkles size={13} className="text-[#d4843a]" /> {analysis.keyInsight}
                 </div>
+              )}
+              {analysis?.sentimentFlag && (
+                <div className="mt-1.5 text-xs text-[#6b7265] italic">{analysis.sentimentFlag}</div>
               )}
             </div>
           </div>
 
-          {/* Scores */}
-          <div className="grid grid-cols-2 gap-6 mb-8">
+          {/* PHQ-2 + GAD-2 Scores */}
+          <div className="grid grid-cols-2 gap-4 mb-5">
             {[
-              { label: 'PHQ-2 — Depression', score: scores.phq, max: 6, isHigh: scores.phq >= 2 },
-              { label: 'GAD-2 — Anxiety', score: scores.gad, max: 6, isHigh: scores.gad >= 2 },
+              { label: 'PHQ-2 — Depression', score: scores.phq, max: 6, hi: scores.phq >= 2 },
+              { label: 'GAD-2 — Anxiety',   score: scores.gad, max: 6, hi: scores.gad >= 2 },
             ].map(s => (
-              <motion.div whileHover={{ y: -4 }} key={s.label} className="bg-white border border-[#d8d0c4] rounded-[2rem] p-8 text-center shadow-sm">
-                <div className={`font-serif text-6xl font-bold mb-2 ${s.isHigh ? 'text-[#c4605a]' : 'text-[#4a7c59]'}`}>
-                  {s.score}/{s.max}
-                </div>
-                <div className="text-sm text-[#6b7265] uppercase tracking-widest font-bold">{s.label}</div>
-              </motion.div>
+              <div key={s.label} className="bg-white border border-[#d8d0c4] rounded-2xl p-5 text-center shadow-sm">
+                <div className={`font-serif text-5xl font-bold mb-1 ${s.hi ? 'text-[#c4605a]' : 'text-[#4a7c59]'}`}>{s.score}/{s.max}</div>
+                <div className="text-xs text-[#6b7265] uppercase tracking-wider font-bold">{s.label}</div>
+              </div>
             ))}
           </div>
 
-          {/* AI-Generated Steps */}
-          <div className="bg-white border border-[#d8d0c4] rounded-[2rem] p-8 mb-8 shadow-sm">
-            <h3 className="font-serif text-2xl font-bold mb-6 flex items-center gap-3 text-[#2c3028]">
-              <span className="bg-[#e8f5e9] p-2 rounded-xl"><Sparkles size={20} className="text-[#4a7c59]" /></span>
-              Your personalised next steps
+          {/* TherapyAgent — personalised CBT exercise (low/moderate only) */}
+          {therapy && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="bg-gradient-to-br from-[#e8f5e9] to-[#f0fdf4] border border-[#a5d6a7] rounded-2xl p-5 mb-5">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="bg-[#4a7c59] text-white p-2 rounded-xl shrink-0"><Bot size={16} /></div>
+                <div>
+                  <div className="text-[10px] text-[#4a7c59] font-bold uppercase tracking-wider">TherapyAgent · {therapy.duration}</div>
+                  <div className="font-bold text-[#2c3028]">{therapy.title}</div>
+                  <div className="text-xs text-[#6b7265] italic mt-0.5">{therapy.rationale}</div>
+                </div>
+              </div>
+              <ol className="space-y-1.5 pl-1">
+                {therapy.instruction.split('\n').filter(Boolean).map((step, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-[#2c3028]">
+                    <span className="w-5 h-5 rounded-full bg-[#4a7c59] text-white text-[10px] flex items-center justify-center shrink-0 mt-0.5 font-bold">{i + 1}</span>
+                    {step.replace(/^\d+\.\s*/, '')}
+                  </li>
+                ))}
+              </ol>
+              <button onClick={() => setTab && setTab('resources')} className="mt-3 text-xs text-[#4a7c59] font-bold hover:underline">
+                → More exercises in Resources
+              </button>
+            </motion.div>
+          )}
+
+          {/* CareNavigatorAgent — next steps */}
+          <div className="bg-white border border-[#d8d0c4] rounded-2xl p-6 mb-5 shadow-sm">
+            <h3 className="font-bold text-base mb-4 flex items-center gap-2 text-[#2c3028]">
+              <span className="bg-[#f0ece5] p-1.5 rounded-lg"><Sparkles size={16} className="text-[#d4843a]" /></span>
+              CareNavigator — your personalised next steps
             </h3>
-            <ul className="space-y-4">
+            <ul className="space-y-3">
               {steps.map((step, i) => (
-                <motion.li
-                  key={i}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.15 }}
-                  className="flex gap-4 text-[#2c3028] text-base"
-                >
-                  <div className={`w-3 h-3 mt-1.5 rounded-full ${style.dot} shrink-0 shadow-lg`} />
-                  {step}
+                <motion.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
+                  className="flex gap-3 text-sm text-[#2c3028]">
+                  <div className={`w-2.5 h-2.5 mt-1.5 rounded-full ${style.dot} shrink-0`} />{step}
                 </motion.li>
               ))}
             </ul>
           </div>
 
+          {/* FollowUpAgent — scheduled check-in */}
+          {followUpQ && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+              className="bg-[#fff8e1] border border-[#ffe082] rounded-2xl p-4 mb-5">
+              <div className="text-[10px] text-[#f57f17] font-bold uppercase tracking-wider mb-1">FollowUpAgent · 7-day check-in scheduled</div>
+              <p className="text-sm text-[#2c3028]">We'll check in with you in 7 days and ask: <strong>"{followUpQ}"</strong></p>
+            </motion.div>
+          )}
+
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <button onClick={onRestart} className="flex items-center justify-center gap-2 bg-transparent border-2 border-[#4a7c59] text-[#4a7c59] hover:bg-[#4a7c59] hover:text-white px-8 py-4 rounded-full font-semibold transition-all">
-              <RefreshCw size={18} /> Retake Screening
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <button onClick={onRestart} className="flex items-center justify-center gap-2 border-2 border-[#4a7c59] text-[#4a7c59] hover:bg-[#4a7c59] hover:text-white px-8 py-3.5 rounded-full font-semibold transition-all">
+              <RefreshCw size={17} /> Retake Screening
             </button>
             {risk !== 'low' && (
-              <button
-                onClick={() => setTab && setTab('directory')}
-                className="flex items-center justify-center gap-2 bg-[#d4843a] text-white px-8 py-4 rounded-full font-semibold hover:bg-[#c07030] transition-all shadow-[0_0_20px_rgba(212,132,58,0.3)]">
-                🌍 Find a Helpline <ArrowRight size={18} />
+              <button onClick={() => setTab && setTab('directory')}
+                className="flex items-center justify-center gap-2 bg-[#d4843a] text-white px-8 py-3.5 rounded-full font-semibold hover:bg-[#c07030] transition-all shadow-lg">
+                🌍 Find a Helpline <ArrowRight size={17} />
               </button>
             )}
           </div>
