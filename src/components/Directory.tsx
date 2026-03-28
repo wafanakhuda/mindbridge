@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, Phone, Globe2, Filter } from 'lucide-react';
+import { Search, Phone, Globe2, Filter, ArrowUp } from 'lucide-react';
 import { directoryData } from '../data/directory';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -138,6 +138,17 @@ export default function Directory() {
           </motion.div>
         )}
       </motion.div>
+
+      {/* Back to top */}
+      {filtered.length > 9 && (
+        <div className="text-center mt-8">
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="inline-flex items-center gap-2 bg-white border border-[#d8d0c4] text-[#6b7265] px-5 py-2.5 rounded-full text-sm font-medium hover:border-[#4a7c59] hover:text-[#4a7c59] transition-all shadow-sm">
+            <ArrowUp size={15} /> Back to top
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }

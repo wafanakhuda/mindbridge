@@ -218,14 +218,10 @@ export default function Resources() {
               </motion.div>
             </motion.div>
           )}
+          {showBreathing && <BreathingExercise onClose={() => setShowBreathing(false)} />}
         </AnimatePresence>,
         document.body
       )}
-
-      {/* Breathing Exercise Modal */}
-      <AnimatePresence>
-        {showBreathing && <BreathingExercise onClose={() => setShowBreathing(false)} />}
-      </AnimatePresence>
 
     </motion.div>
   );

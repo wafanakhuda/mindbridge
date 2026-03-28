@@ -103,7 +103,11 @@ export default function Dashboard() {
         <div className="lg:col-span-2 bg-white border border-[#d8d0c4] rounded-[1.5rem] p-6 shadow-sm">
           <h3 className="font-bold text-[#2c3028] mb-4 flex items-center gap-2"><FileText size={18} className="text-[#4a7c59]" /> Recent Screenings</h3>
           <div className="space-y-2">
-            {recentScreenings.map((s: any, i: number) => {
+            {recentScreenings.length === 0 ? (
+              <div className="text-center py-8 text-[#6b7265] text-sm">
+                No screenings yet. <span className="text-[#4a7c59] font-medium">Run the seed command to add sample data.</span>
+              </div>
+            ) : recentScreenings.map((s: any, i: number) => {
               const isOverdue = !s.followUpDone && new Date(s.followUpDue) < new Date();
               return (
                 <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}

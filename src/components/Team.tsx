@@ -1,5 +1,4 @@
 import { motion } from 'motion/react';
-import { Linkedin, Globe } from 'lucide-react';
 
 const TEAM = [
   {
@@ -7,36 +6,32 @@ const TEAM = [
     role: 'Founder & Clinical Strategy Lead',
     bio: 'Physician and public health specialist. Leads clinical design, validated screening protocols, and primary care integration strategy for MindBridge.',
     emoji: '👩🏾‍⚕️',
-    bg: 'bg-[#e8f5e9]',
-    border: 'border-[#c8e6c9]',
-    accent: 'text-[#2e7d32]',
+    bg: 'bg-[#e8f5e9]', border: 'border-[#c8e6c9]', accent: 'text-[#2e7d32]',
+    tags: ['Clinical Design', 'PHQ-2/GAD-2', 'Care Pathways', 'DSM-5 Criteria'],
   },
   {
     name: 'Dr Nameera Banu',
     role: 'Research Lead',
     bio: 'Mental health researcher specialising in PHQ/GAD validated tools, epidemiology of untreated illness, and evidence-based community interventions.',
     emoji: '👩🏽‍🔬',
-    bg: 'bg-[#e3f2fd]',
-    border: 'border-[#bbdefb]',
-    accent: 'text-[#1565c0]',
+    bg: 'bg-[#e3f2fd]', border: 'border-[#bbdefb]', accent: 'text-[#1565c0]',
+    tags: ['Research', 'WHO Data', 'Validated Tools', 'Evidence Base'],
   },
   {
     name: 'Dr Chidinma Ndiagwalu',
     role: 'Community Engagement Lead',
     bio: 'Specialist in grassroots health communication, stigma reduction, and designing culturally competent outreach campaigns for underserved communities.',
     emoji: '👩🏿‍💼',
-    bg: 'bg-[#fff8e1]',
-    border: 'border-[#ffe082]',
-    accent: 'text-[#f57f17]',
+    bg: 'bg-[#fff8e1]', border: 'border-[#ffe082]', accent: 'text-[#f57f17]',
+    tags: ['Community', 'Stigma Reduction', 'NGO Partnerships', 'Awareness'],
   },
   {
     name: 'Wafa Nakhuda',
     role: 'Technical & Software Lead',
-    bio: 'Full-stack developer and AI integration specialist. Architected the MindBridge platform, Gemini agent system, and global hotline directory.',
+    bio: 'Full-stack developer and AI integration specialist. Architected the MindBridge platform, 8 Gemini AI agents, real-time screening, and global crisis directory.',
     emoji: '👩🏽‍💻',
-    bg: 'bg-[#f3e5f5]',
-    border: 'border-[#e1bee7]',
-    accent: 'text-[#7b1fa2]',
+    bg: 'bg-[#f3e5f5]', border: 'border-[#e1bee7]', accent: 'text-[#7b1fa2]',
+    tags: ['React + Vite', 'Gemini AI Agents', 'MongoDB', 'Railway'],
   },
 ];
 

@@ -1,44 +1,37 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Activity, Calendar, Clock, Video, RefreshCw, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
-import { api } from '../api';
+import { Activity, Calendar, Clock, Video, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, UserPlus, Lock } from 'lucide-react';
+import { api, isOfflineDemo } from '../api';
 
 interface Screening {
-  _id: string;
-  anonymousId: string;
-  phqScore: number;
-  gadScore: number;
-  riskLevel: 'low' | 'moderate' | 'high';
-  riskScore: number;
-  channel: string;
-  isCrisis: boolean;
-  followUpDue: string;
-  followUpDone: boolean;
-  createdAt: string;
+  _id: string; anonymousId: string; phqScore: number; gadScore: number;
+  riskLevel: 'low' | 'moderate' | 'high'; riskScore: number; channel: string;
+  isCrisis: boolean; followUpDue: string; followUpDone: boolean; createdAt: string;
+}
+interface Appointment {
+  _id: string; doctorName: string; doctorSpeciality: string; clinicName: string;
+  clinicLocation: string; dateTime: string; status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  riskLevel: string; isCritical: boolean; notes: string; meetingLink?: string; createdAt: string;
 }
 
-interface Appointment {
-  _id: string;
-  doctorName: string;
-  doctorSpeciality: string;
-  clinicName: string;
-  clinicLocation: string;
-  dateTime: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
-  riskLevel: string;
-  isCritical: boolean;
-  notes: string;
-  meetingLink?: string;
-  createdAt: string;
-}
+// Demo data shown when offline
+const DEMO_SCREENINGS: Screening[] = [
+  { _id: '1', anonymousId: 'anon-demo-1009', phqScore: 4, gadScore: 5, riskLevel: 'high', riskScore: 75, channel: 'web', isCrisis: false, followUpDone: false, followUpDue: new Date(Date.now() + 5 * 86400000).toISOString(), createdAt: new Date(Date.now() - 1 * 86400000).toISOString() },
+  { _id: '2', anonymousId: 'anon-demo-1005', phqScore: 2, gadScore: 3, riskLevel: 'moderate', riskScore: 42, channel: 'web', isCrisis: false, followUpDone: true, followUpDue: new Date(Date.now() - 2 * 86400000).toISOString(), createdAt: new Date(Date.now() - 8 * 86400000).toISOString() },
+  { _id: '3', anonymousId: 'anon-demo-1001', phqScore: 1, gadScore: 1, riskLevel: 'low', riskScore: 17, channel: 'web', isCrisis: false, followUpDone: true, followUpDue: new Date(Date.now() - 9 * 86400000).toISOString(), createdAt: new Date(Date.now() - 15 * 86400000).toISOString() },
+];
+const DEMO_APPOINTMENTS: Appointment[] = [
+  { _id: '1', doctorName: 'Dr Sarah Chen', doctorSpeciality: 'Psychiatry', clinicName: 'City Mental Health Centre', clinicLocation: 'London, UK', dateTime: new Date(Date.now() + 2 * 3600000).toISOString(), status: 'confirmed', riskLevel: 'high', isCritical: true, notes: '', meetingLink: 'https://meet.jit.si/mindbridge-demo-001', createdAt: new Date().toISOString() },
+  { _id: '2', doctorName: 'Dr Priya Sharma', doctorSpeciality: 'General Psychiatry', clinicName: 'NIMHANS Community Clinic', clinicLocation: 'Bangalore, India', dateTime: new Date(Date.now() + 48 * 3600000).toISOString(), status: 'pending', riskLevel: 'moderate', isCritical: false, notes: 'Follow-up from last session', createdAt: new Date().toISOString() },
+];
 
 const RISK_STYLE: Record<string, string> = {
-  low:      'bg-[#e8f5e9] text-[#2e7d32] border-[#c8e6c9]',
+  low: 'bg-[#e8f5e9] text-[#2e7d32] border-[#c8e6c9]',
   moderate: 'bg-[#fff8e1] text-[#f57f17] border-[#ffe082]',
-  high:     'bg-[#fce4ec] text-[#c62828] border-[#f48fb1]',
+  high: 'bg-[#fce4ec] text-[#c62828] border-[#f48fb1]',
 };
 const STATUS_STYLE: Record<string, string> = {
-  pending:   'bg-[#fff8e1] text-[#f57f17]',
+  pending: 'bg-[#fff8e1] text-[#f57f17]',
   confirmed: 'bg-[#e8f5e9] text-[#2e7d32]',
   completed: 'bg-[#e3f2fd] text-[#1565c0]',
   cancelled: 'bg-[#fce4ec] text-[#c62828]',
@@ -51,10 +44,21 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'appointments' | 'screenings'>('appointments');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   const load = async () => {
     setLoading(true);
     setError('');
+
+    // Offline demo mode - show sample data
+    if (isOfflineDemo()) {
+      setScreenings(DEMO_SCREENINGS);
+      setAppointments(DEMO_APPOINTMENTS);
+      setIsDemo(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const [sRes, aRes] = await Promise.all([
         api.screenings.myHistory(),
@@ -62,8 +66,15 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
       ]);
       setScreenings(sRes.screenings || []);
       setAppointments(aRes.appointments || []);
-    } catch {
-      setError('Could not load your health record. Make sure you are connected.');
+      setIsDemo(false);
+    } catch (e: any) {
+      if (e.message === 'OFFLINE_MODE') {
+        setScreenings(DEMO_SCREENINGS);
+        setAppointments(DEMO_APPOINTMENTS);
+        setIsDemo(true);
+      } else {
+        setError('Could not load your health record. Check your connection.');
+      }
     } finally {
       setLoading(false);
     }
@@ -82,25 +93,41 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
           <h2 className="font-serif text-3xl text-[#2c3028]">My Health Record</h2>
           <p className="text-sm text-[#6b7265] mt-0.5">Your screening history and appointments</p>
         </div>
-        <button onClick={load} disabled={loading} className="flex items-center gap-1.5 bg-white border border-[#d8d0c4] text-[#2c3028] px-3 py-1.5 rounded-full text-xs font-medium hover:bg-[#f0ece5] transition-all">
+        <button onClick={load} disabled={loading}
+          className="flex items-center gap-1.5 bg-white border border-[#d8d0c4] text-[#2c3028] px-3 py-1.5 rounded-full text-xs font-medium hover:bg-[#f0ece5] transition-all">
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
 
-      {/* Quick stats */}
+      {/* Demo mode banner */}
+      {isDemo && (
+        <div className="bg-[#fff8e1] border border-[#ffe082] rounded-2xl p-4 mb-5 flex items-start gap-3">
+          <Lock size={16} className="text-[#f57f17] shrink-0 mt-0.5" />
+          <div>
+            <div className="text-sm font-bold text-[#f57f17]">Showing demo data</div>
+            <p className="text-xs text-[#2c3028] mt-0.5">
+              You are using a demo account. Real health records save when you create a personal account and log in.
+            </p>
+            <button onClick={() => setTab && setTab('home')}
+              className="mt-2 flex items-center gap-1.5 bg-[#4a7c59] text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#3a6b3e] transition-all">
+              <UserPlus size={12} /> Create real account
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white border border-[#d8d0c4] rounded-2xl p-4 text-center">
-          <div className="font-serif text-3xl font-bold text-[#4a7c59]">{screenings.length}</div>
-          <div className="text-xs text-[#6b7265] uppercase tracking-wider mt-0.5">Screenings</div>
-        </div>
-        <div className="bg-white border border-[#d8d0c4] rounded-2xl p-4 text-center">
-          <div className="font-serif text-3xl font-bold text-[#4a7c59]">{upcoming.length}</div>
-          <div className="text-xs text-[#6b7265] uppercase tracking-wider mt-0.5">Upcoming Appts</div>
-        </div>
-        <div className="bg-white border border-[#d8d0c4] rounded-2xl p-4 text-center">
-          <div className="font-serif text-3xl font-bold text-[#4a7c59]">{screenings.filter(s => s.followUpDone).length}</div>
-          <div className="text-xs text-[#6b7265] uppercase tracking-wider mt-0.5">Follow-ups Done</div>
-        </div>
+        {[
+          { num: screenings.length, label: 'Screenings' },
+          { num: upcoming.length, label: 'Upcoming Appts' },
+          { num: screenings.filter(s => s.followUpDone).length, label: 'Follow-ups Done' },
+        ].map(s => (
+          <div key={s.label} className="bg-white border border-[#d8d0c4] rounded-2xl p-4 text-center shadow-sm">
+            <div className="font-serif text-3xl font-bold text-[#4a7c59]">{s.num}</div>
+            <div className="text-xs text-[#6b7265] uppercase tracking-wider mt-0.5">{s.label}</div>
+          </div>
+        ))}
       </div>
 
       {/* Tabs */}
@@ -131,12 +158,12 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
         <AnimatePresence mode="wait">
           {activeTab === 'appointments' && (
             <motion.div key="appts" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-
               {appointments.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-2xl border border-[#d8d0c4]">
                   <Calendar size={32} className="mx-auto mb-3 text-[#d8d0c4]" />
                   <p className="text-[#6b7265] font-medium">No appointments yet</p>
-                  <button onClick={() => setTab && setTab('screening')} className="mt-3 text-sm text-[#4a7c59] font-bold hover:underline">
+                  <button onClick={() => setTab && setTab('screening')}
+                    className="mt-3 text-sm text-[#4a7c59] font-bold hover:underline">
                     Take a screening to get matched with a doctor
                   </button>
                 </div>
@@ -165,7 +192,8 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
                 <div className="text-center py-12 bg-white rounded-2xl border border-[#d8d0c4]">
                   <Activity size={32} className="mx-auto mb-3 text-[#d8d0c4]" />
                   <p className="text-[#6b7265] font-medium">No screenings recorded yet</p>
-                  <button onClick={() => setTab && setTab('screening')} className="mt-3 text-sm text-[#4a7c59] font-bold hover:underline">
+                  <button onClick={() => setTab && setTab('screening')}
+                    className="mt-3 text-sm text-[#4a7c59] font-bold hover:underline">
                     Take your first screening
                   </button>
                 </div>
@@ -178,11 +206,11 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
                         className="bg-white border border-[#d8d0c4] rounded-2xl p-4 hover:shadow-md transition-all">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-serif text-lg font-bold border ${RISK_STYLE[s.riskLevel]}`}>
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-serif text-lg font-bold border-2 ${RISK_STYLE[s.riskLevel]}`}>
                               {s.riskScore}
                             </div>
                             <div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${RISK_STYLE[s.riskLevel]}`}>
                                   {s.riskLevel.charAt(0).toUpperCase() + s.riskLevel.slice(1)} Risk {s.isCrisis && '🆘'}
                                 </span>
@@ -197,7 +225,7 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
                           <div className="text-right shrink-0">
                             <div className="text-xs text-[#6b7265]">{new Date(s.createdAt).toLocaleDateString()}</div>
                             <div className={`text-xs font-bold mt-1 ${isOverdue ? 'text-[#c62828]' : s.followUpDone ? 'text-[#4a7c59]' : 'text-[#f57f17]'}`}>
-                              {s.followUpDone ? 'Follow-up complete' : isOverdue ? 'Follow-up overdue' : `Follow-up ${new Date(s.followUpDue).toLocaleDateString()}`}
+                              {s.followUpDone ? 'Follow-up done' : isOverdue ? 'Follow-up overdue' : `Due ${new Date(s.followUpDue).toLocaleDateString()}`}
                             </div>
                           </div>
                         </div>
@@ -224,7 +252,10 @@ function AppointmentCard({ appt, expanded, onToggle }: { appt: Appointment; expa
             <Calendar size={18} className={isUpcoming ? 'text-[#4a7c59]' : 'text-[#6b7265]'} />
           </div>
           <div>
-            <div className="font-bold text-sm text-[#2c3028]">{appt.doctorName} {appt.isCritical && <span className="text-xs text-[#c62828] font-bold ml-1">EMERGENCY</span>}</div>
+            <div className="font-bold text-sm text-[#2c3028]">
+              {appt.doctorName}
+              {appt.isCritical && <span className="text-xs text-[#c62828] font-bold ml-1">EMERGENCY</span>}
+            </div>
             <div className="text-xs text-[#6b7265]">{appt.doctorSpeciality} - {appt.clinicLocation}</div>
           </div>
         </div>
@@ -238,7 +269,8 @@ function AppointmentCard({ appt, expanded, onToggle }: { appt: Appointment; expa
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden border-t border-[#f0ece5] px-4 pb-4 pt-3 space-y-2.5">
             <div className="flex items-center gap-2 text-sm text-[#2c3028]">
-              <Clock size={14} className="text-[#4a7c59]" /> {new Date(appt.dateTime).toLocaleString([], { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              <Clock size={14} className="text-[#4a7c59]" />
+              {new Date(appt.dateTime).toLocaleString([], { weekday: 'long', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </div>
             <div className="text-xs text-[#6b7265]">{appt.clinicName}</div>
             {appt.notes && <div className="text-xs text-[#6b7265] bg-[#f0ece5] rounded-lg px-3 py-2">Notes: {appt.notes}</div>}

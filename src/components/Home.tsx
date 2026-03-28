@@ -156,24 +156,28 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
             title="TriageAgent"
             desc="Reads exactly what you share and responds personally. Guides you through validated PHQ-2 and GAD-2 questions."
             imgUrl="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=400&h=300"
+            onClick={() => setTab('screening')}
           />
           <FeatureCard
             icon={<Activity size={28} className="text-[#d4843a]" />}
             title="RiskAgent"
             desc="Analyses your scores and your language together. Returns a 0-100 risk score, personal insight, and sentiment observation."
             imgUrl="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=400&h=300"
+            onClick={() => setTab('screening')}
           />
           <FeatureCard
             icon={<ShieldCheck size={28} className="text-[#7baec8]" />}
             title="TherapyAgent"
             desc="Picks the most appropriate CBT exercise for you - box breathing, grounding, behavioural activation, or thought challenging."
             imgUrl="https://images.unsplash.com/photo-1512314889357-e157c22f938d?auto=format&fit=crop&q=80&w=400&h=300"
+            onClick={() => setTab('resources')}
           />
           <FeatureCard
             icon={<Users size={28} className="text-[#c4605a]" />}
             title="CareNavigator + FollowUpAgent"
             desc="Routes you to appropriate care with personalised next steps. Schedules 7, 30, and 90-day check-in questions."
             imgUrl="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=400&h=300"
+            onClick={() => setTab('directory')}
           />
         </motion.div>
       </div>
@@ -194,13 +198,14 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
   );
 }
 
-const FeatureCard = ({ icon, title, desc, imgUrl }: any) => (
-  <motion.div 
+const FeatureCard = ({ icon, title, desc, imgUrl, onClick }: any) => (
+  <motion.div
     variants={{
       hidden: { opacity: 0, y: 30 },
       show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
     }}
-    className="group bg-white rounded-[2rem] overflow-hidden border border-[#d8d0c4] shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col"
+    onClick={onClick}
+    className={`group bg-white rounded-[2rem] overflow-hidden border border-[#d8d0c4] shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
   >
     <div className="h-48 overflow-hidden relative">
       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10 duration-500"></div>
@@ -217,6 +222,11 @@ const FeatureCard = ({ icon, title, desc, imgUrl }: any) => (
       </div>
       <h3 className="font-bold text-xl mb-3 text-[#2c3028] mt-2">{title}</h3>
       <p className="text-[#6b7265] leading-relaxed text-sm flex-1">{desc}</p>
+      {onClick && (
+        <div className="mt-4 text-xs font-bold text-[#4a7c59] group-hover:text-[#3a6b3e] flex items-center gap-1 transition-colors">
+          Try it <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+        </div>
+      )}
     </div>
   </motion.div>
 );

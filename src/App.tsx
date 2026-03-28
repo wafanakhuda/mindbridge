@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Home as HomeIcon, MessageCircle, Users, Phone, BookOpen, BarChart3, LogOut, ShieldCheck, Heart, Globe2, Stethoscope, Activity } from 'lucide-react';
+import { Home as HomeIcon, MessageCircle, Users, Phone, BookOpen, BarChart3, LogOut, ShieldCheck, Heart, Globe2, Stethoscope, Activity, Video } from 'lucide-react';
 import Home from './components/Home';
 import Screening from './components/Screening';
 import Community from './components/Community';
@@ -12,12 +12,14 @@ import SignIn from './components/SignIn';
 import AdminDashboard from './components/AdminDashboard';
 import MyHealth from './components/MyHealth';
 import Team from './components/Team';
+import VideoConsult from './components/VideoConsult';
 import { clearAuth, getStoredUser } from './api';
 
 export default function App() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentTab, setCurrentTab] = useState('home');
+  const [showCrisisStrip, setShowCrisisStrip] = useState(true);
 
   // Restore session from localStorage on mount
   useEffect(() => {
@@ -43,6 +45,16 @@ export default function App() {
   };
 
   const renderTab = () => {
+    const titles: Record<string, string> = {
+      home: 'MindBridge - Home', screening: 'MindBridge - Check-In',
+      community: 'MindBridge - Community', peer: 'MindBridge - Peer Space',
+      directory: 'MindBridge - Global Directory', resources: 'MindBridge - Resources',
+      clinical: 'MindBridge - Clinical Tools', dashboard: 'MindBridge - Dashboard',
+      myhealth: 'MindBridge - My Health', team: 'MindBridge - Our Team',
+      admin: 'MindBridge - Administration', video: 'MindBridge - Video Consult',
+    };
+    document.title = titles[currentTab] || 'MindBridge';
+
     switch (currentTab) {
       case 'home':       return <Home setTab={setCurrentTab} />;
       case 'screening':  return <Screening setTab={setCurrentTab} currentUser={currentUser} />;
@@ -53,6 +65,7 @@ export default function App() {
       case 'clinical':   return <ClinicalResources />;
       case 'dashboard':  return <Dashboard />;
       case 'myhealth':   return <MyHealth setTab={setCurrentTab} />;
+      case 'video':      return <VideoConsult />;
       case 'team':       return <Team />;
       case 'admin':      return <AdminDashboard />;
       default:           return <Home setTab={setCurrentTab} />;
@@ -63,11 +76,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f7f3ed] text-[#2c3028] font-sans">
-      {/* Crisis Strip */}
-      {userRole === 'patient' && (
+      {/* Crisis Strip - dismissible */}
+      {userRole === 'patient' && showCrisisStrip && (
         <div className="bg-[#c4605a] text-white py-2 px-4 text-center text-sm font-medium flex items-center justify-center gap-2 flex-wrap">
           <span>If you are in crisis, help is available right now.</span>
           <button onClick={() => setCurrentTab('directory')} className="underline font-bold">Find your country helpline</button>
+          <button onClick={() => setShowCrisisStrip(false)} className="ml-2 opacity-60 hover:opacity-100 text-white font-bold text-base leading-none" aria-label="Dismiss">×</button>
         </div>
       )}
 
@@ -78,7 +92,7 @@ export default function App() {
           <span>🌿</span> MindBridge
           {currentUser && (
             <span className="text-xs font-sans bg-white/20 px-2 py-0.5 rounded-full ml-1 hidden sm:inline">
-              {currentUser.name}
+              {currentUser?.isAnonymous ? 'Anonymous' : currentUser?.name}
             </span>
           )}
         </div>
@@ -92,6 +106,7 @@ export default function App() {
               <NavButton active={currentTab === 'peer'}      onClick={() => setCurrentTab('peer')}      icon={<Users size={16} />}       label="Peer Space" />
               <NavButton active={currentTab === 'directory'} onClick={() => setCurrentTab('directory')} icon={<Phone size={16} />}       label="Directory" />
               <NavButton active={currentTab === 'resources'} onClick={() => setCurrentTab('resources')} icon={<BookOpen size={16} />}    label="Resources" />
+              <NavButton active={currentTab === 'video'}     onClick={() => setCurrentTab('video')}     icon={<Video size={16} />}       label="Video Call" />
               <NavButton active={currentTab === 'myhealth'}  onClick={() => setCurrentTab('myhealth')}  icon={<Activity size={16} />}    label="My Health" />
               <NavButton active={currentTab === 'team'}      onClick={() => setCurrentTab('team')}      icon={<Heart size={16} />}       label="Our Team" />
             </>
@@ -133,6 +148,7 @@ export default function App() {
           <>
             <MobileNavButton active={currentTab === 'home'}      onClick={() => setCurrentTab('home')}      icon={<HomeIcon size={20} />}      label="Home" />
             <MobileNavButton active={currentTab === 'screening'} onClick={() => setCurrentTab('screening')} icon={<MessageCircle size={20} />} label="Screen" />
+            <MobileNavButton active={currentTab === 'video'}     onClick={() => setCurrentTab('video')}     icon={<Video size={20} />}         label="Video" />
             <MobileNavButton active={currentTab === 'myhealth'}  onClick={() => setCurrentTab('myhealth')}  icon={<Activity size={20} />}      label="My Health" />
             <MobileNavButton active={currentTab === 'directory'} onClick={() => setCurrentTab('directory')} icon={<Phone size={20} />}         label="Helplines" />
             <MobileNavButton active={currentTab === 'resources'} onClick={() => setCurrentTab('resources')} icon={<BookOpen size={20} />}      label="Resources" />

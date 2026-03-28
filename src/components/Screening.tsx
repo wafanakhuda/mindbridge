@@ -145,6 +145,68 @@ function SleepCheck({ onSelect, disabled }: { onSelect: (v: string) => void; dis
   );
 }
 
+function ChatGptOptional({ copied, setCopied, chatGptText, setChatGptText, chatGptAdded, onSkip, onAdd, disabled }: any) {
+  const [expanded, setExpanded] = useState(false);
+  const [done, setDone] = useState(chatGptAdded);
+
+  if (done) return null;
+
+  return (
+    <div className="w-full mt-2 space-y-2">
+      {!expanded ? (
+        <div className="flex gap-2">
+          <motion.button whileTap={{ scale: 0.97 }} disabled={disabled}
+            onClick={() => setExpanded(true)}
+            className="flex-1 py-2.5 rounded-xl border-2 border-[#10a37f]/40 bg-[#f0fdf9] text-[#059669] text-xs font-bold hover:border-[#10a37f] transition-all flex items-center justify-center gap-1.5">
+            🤖 Add ChatGPT history
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.97 }} disabled={disabled}
+            onClick={() => { setDone(true); onSkip(); }}
+            className="flex-1 py-2.5 rounded-xl border-2 border-[#d8d0c4] bg-white text-[#6b7265] text-xs font-bold hover:border-[#4a7c59] hover:text-[#4a7c59] transition-all">
+            Skip
+          </motion.button>
+        </div>
+      ) : (
+        <div className="bg-[#f0fdf9] border-2 border-[#10a37f]/30 rounded-2xl p-3 space-y-3">
+          <div className="text-xs font-bold text-[#059669]">Step 1 - Copy this prompt into ChatGPT:</div>
+          <div className="bg-white rounded-xl border border-[#bbf7d0] p-2.5">
+            <pre className="text-[10px] text-[#2c3028] whitespace-pre-wrap font-mono leading-relaxed">{`Please summarise my mental health history from our conversations. Include:
+1. Main concerns and symptoms I mentioned
+2. How long I have been experiencing these
+3. Triggers or difficult situations I described
+4. Coping strategies I mentioned trying
+5. Significant life events or stressors I shared
+
+Be concise and clinical. Do not give advice, just summarise.`}</pre>
+          </div>
+          <motion.button whileTap={{ scale: 0.97 }}
+            onClick={() => { navigator.clipboard.writeText(`Please summarise my mental health history from our conversations. Include:\n1. Main concerns and symptoms I mentioned\n2. How long I have been experiencing these\n3. Triggers or difficult situations I described\n4. Coping strategies I mentioned trying\n5. Significant life events or stressors I shared\n\nBe concise and clinical. Do not give advice, just summarise.`); setCopied(true); setTimeout(() => setCopied(false), 2500); }}
+            className="w-full flex items-center justify-center gap-2 bg-[#10a37f] text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-[#059669] transition-all">
+            {copied ? <><Check size={12} /> Copied!</> : <><Copy size={12} /> Copy Prompt</>}
+          </motion.button>
+          <div className="text-xs font-bold text-[#6b7265]">Step 2 - Paste ChatGPT's summary here:</div>
+          <textarea value={chatGptText} onChange={e => setChatGptText(e.target.value)}
+            placeholder="Paste ChatGPT's summary here..."
+            rows={3}
+            className="w-full bg-white border-2 border-[#bbf7d0] rounded-xl p-2.5 text-xs focus:outline-none focus:border-[#10a37f] resize-none placeholder:text-[#a3a89f] transition-all" />
+          <div className="flex gap-2">
+            <motion.button whileTap={{ scale: 0.97 }} disabled={!chatGptText.trim() || disabled}
+              onClick={() => { setDone(true); onAdd(); }}
+              className="flex-1 py-2.5 rounded-xl bg-[#4a7c59] disabled:bg-[#d8d0c4] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+              <Check size={12} /> Add to screening
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.97 }} disabled={disabled}
+              onClick={() => { setDone(true); onSkip(); }}
+              className="flex-1 py-2.5 rounded-xl border-2 border-[#d8d0c4] bg-white text-[#6b7265] text-xs font-bold hover:border-[#4a7c59] transition-all">
+              Skip
+            </motion.button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ScaleQuestion({ onSelect, disabled }: { onSelect: (o: { text: string; val: number }) => void; disabled: boolean }) {
   const opts = [
     { text: 'Not at all', emoji: '😊', val: 0, color: 'border-[#4a7c59] hover:bg-[#e8f5e9]' },
@@ -249,7 +311,7 @@ function MiniBreathing({ onDone, disabled }: { onDone: () => void; disabled: boo
 // MAIN SCREENING COMPONENT
 // ─────────────────────────────────────────────────────────────────
 export default function Screening({ setTab, currentUser }: { setTab?: (tab: string) => void; currentUser?: any }) {
-  const [phase, setPhase]         = useState<'chatgpt' | 'chat' | 'results'>('chatgpt');
+  const [phase, setPhase]         = useState<'start' | 'chat' | 'results'>('start');
   const [messages, setMessages]   = useState<any[]>([]);
   const [isTyping, setIsTyping]   = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -334,8 +396,27 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
     addUser(thoughts);
     contextRef.current += `. Thoughts: ${thoughts}`;
 
-    await typing(700);
-    addBot("Thank you for being honest with me. I am going to ask you 4 short questions now. First though - how has your energy been?", 'energyslider');
+    await typing(600);
+    // Offer optional ChatGPT history here - mid-screening, not at the start
+    addBot(
+      "Thank you for sharing that. One optional step before the questions - if you have spoken to ChatGPT about your mental health before, you can add that history to make your results more personalised. Or just skip and continue.",
+      'chatgpt-optional'
+    );
+  };
+
+  // ── WIDGET: ChatGPT optional (skip or add) ───────────────────
+  const handleChatGptSkip = async () => {
+    addUser('Skip - continue to questions');
+    await typing(400);
+    addBot("No problem at all. Let me ask you a few questions - first, how has your energy been lately?", 'energyslider');
+  };
+
+  const handleChatGptAdd = async () => {
+    setChatGptAdded(true);
+    contextRef.current = `ChatGPT history: ${chatGptRef.current}. ` + contextRef.current;
+    addUser('I have added my ChatGPT history');
+    await typing(400);
+    addBot("Thank you - I will use that context to personalise your results. Now, how has your energy been lately?", 'energyslider');
   };
 
   // ── WIDGET: energy slider ────────────────────────────────────
@@ -441,89 +522,54 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
   // ─────────────────────────────────────────────────────────────
   // PHASE: CHATGPT PANEL
   // ─────────────────────────────────────────────────────────────
-  if (phase === 'chatgpt') {
+  if (phase === 'start') {
     return (
       <div className="max-w-xl mx-auto px-4 py-6">
         <Disclaimer />
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-[2rem] border border-[#d8d0c4] shadow-xl overflow-hidden">
 
-          <div className="bg-gradient-to-br from-[#4a7c59] to-[#3a6b3e] p-6 text-white">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-4xl">🌿</span>
-              <div>
-                <h2 className="font-serif text-2xl font-bold">MindBridge Check-In</h2>
-                <p className="text-white/75 text-xs">Conversational - Personalised - Validated</p>
-              </div>
-            </div>
-            <p className="text-white/85 text-sm">
-              A non-linear mental health check-in using PHQ-2 and GAD-2 tools. Each question adapts to your previous answer. Takes 4-5 minutes.
+          {/* Header */}
+          <div className="bg-gradient-to-br from-[#4a7c59] to-[#3a6b3e] p-8 text-white text-center">
+            <div className="text-5xl mb-3">🌿</div>
+            <h2 className="font-serif text-2xl font-bold mb-2">Mental Health Check-In</h2>
+            <p className="text-white/80 text-sm leading-relaxed">
+              A warm, conversational check-in using validated PHQ-2 and GAD-2 screening tools.
+              Each question adapts to your previous answer.
             </p>
           </div>
 
-          <div className="p-5 space-y-4">
+          <div className="p-6 space-y-4">
             {!hasApiKey && (
               <div className="bg-[#fff8e1] border-2 border-[#ffe082] rounded-xl p-3 flex gap-2.5 items-start">
                 <span className="text-lg shrink-0">⚠️</span>
                 <div className="text-xs text-[#2c3028]">
                   <strong className="text-[#f57f17] block mb-0.5">AI running in fallback mode</strong>
-                  Add <code className="bg-[#f0ece5] px-1 rounded">VITE_GEMINI_API_KEY</code> to Railway env vars for live AI agents.
+                  Add <code className="bg-[#f0ece5] px-1 rounded">VITE_GEMINI_API_KEY</code> to Railway env vars for live AI.
                   Free key at <strong>aistudio.google.com/app/apikey</strong>
                 </div>
               </div>
             )}
 
-            {/* ChatGPT panel - prominent and always visible */}
-            <div className="bg-gradient-to-br from-[#f0fdf9] to-[#dcfce7] border-2 border-[#10a37f]/40 rounded-2xl p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-9 h-9 bg-[#10a37f] rounded-xl flex items-center justify-center text-lg shrink-0">🤖</div>
-                <div>
-                  <div className="font-bold text-[#2c3028] text-sm">Have you spoken to ChatGPT about your mental health?</div>
-                  <div className="text-xs text-[#6b7265]">Adding your history makes results significantly more personalised</div>
+            {/* What to expect */}
+            <div className="space-y-2">
+              {[
+                { icon: '🎡', text: 'Start with how you are feeling today' },
+                { icon: '💭', text: 'Share some thoughts that feel true for you' },
+                { icon: '📋', text: '4 short questions about the past 2 weeks' },
+                { icon: '✨', text: 'Personalised results with next steps and a CBT exercise' },
+              ].map(item => (
+                <div key={item.text} className="flex items-center gap-3 text-sm text-[#2c3028]">
+                  <span className="text-base w-6 text-center">{item.icon}</span>
+                  {item.text}
                 </div>
-              </div>
-
-              {/* Step 1 */}
-              <div className="bg-white rounded-xl border border-[#bbf7d0] p-3 mb-3">
-                <div className="text-xs font-bold text-[#059669] mb-2">Step 1 - Copy this prompt and paste it into ChatGPT:</div>
-                <div className="bg-[#f0fdf4] rounded-lg p-2.5 border border-[#bbf7d0] mb-2">
-                  <pre className="text-[10px] text-[#2c3028] whitespace-pre-wrap font-mono leading-relaxed">{CHATGPT_PROMPT}</pre>
-                </div>
-                <motion.button whileTap={{ scale: 0.97 }}
-                  onClick={() => { navigator.clipboard.writeText(CHATGPT_PROMPT); setCopied(true); setTimeout(() => setCopied(false), 2500); }}
-                  className="w-full flex items-center justify-center gap-2 bg-[#10a37f] text-white px-4 py-2.5 rounded-full text-xs font-bold hover:bg-[#059669] transition-all">
-                  {copied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy Prompt for ChatGPT</>}
-                </motion.button>
-              </div>
-
-              {/* Step 2 */}
-              <div>
-                <div className="text-xs font-bold text-[#6b7265] mb-1.5">Step 2 - Paste ChatGPT's summary here <span className="font-normal">(optional but very helpful)</span>:</div>
-                <textarea value={chatGptText} onChange={e => setChatGptText(e.target.value)}
-                  placeholder="Paste the summary ChatGPT gave you here..."
-                  rows={3}
-                  className="w-full bg-white border-2 border-[#bbf7d0] rounded-xl p-3 text-xs focus:outline-none focus:border-[#10a37f] resize-none placeholder:text-[#a3a89f] transition-all" />
-                <AnimatePresence>
-                  {chatGptText.trim() && !chatGptAdded && (
-                    <motion.button initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                      onClick={() => setChatGptAdded(true)}
-                      className="mt-1.5 w-full flex items-center justify-center gap-2 bg-[#4a7c59] text-white py-2 rounded-full text-xs font-bold hover:bg-[#3a6b3e] transition-all overflow-hidden">
-                      <Check size={12} /> Add to my screening
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-                {chatGptAdded && (
-                  <div className="mt-1.5 text-xs text-[#4a7c59] font-bold flex items-center gap-1">
-                    <Check size={12} /> Added - screening will use this context
-                  </div>
-                )}
-              </div>
+              ))}
             </div>
 
             <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
               onClick={startChat}
               className="w-full bg-[#4a7c59] hover:bg-[#3a6b3e] text-white py-4 rounded-2xl font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2">
-              🌿 {chatGptAdded ? 'Start Personalised Check-In' : 'Start Check-In'}
+              🌿 Begin Check-In
             </motion.button>
             <p className="text-center text-xs text-[#a3a89f]">4-5 minutes - anonymous and confidential</p>
           </div>
@@ -545,7 +591,7 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
         setTab={setTab}
         currentUser={currentUser}
         onRestart={() => {
-          setPhase('chatgpt');
+          setPhase('start');
           setMessages([]);
           setFinalScores({ phq: 0, gad: 0 });
           phqRef.current = 0;
@@ -566,7 +612,7 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-xl mx-auto px-4 py-4">
       <div className="flex flex-col bg-white rounded-[2rem] shadow-2xl border border-[#d8d0c4] overflow-hidden"
-        style={{ height: '78vh', minHeight: '520px' }}>
+        style={{ height: '78vh', minHeight: '500px', maxHeight: '800px' }}>
 
         {/* Chat Header */}
         <div className="bg-[#4a7c59] px-4 py-3 flex items-center gap-3 shrink-0">
@@ -579,7 +625,13 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
             <div className="text-white/65 text-xs">{isLoading ? 'Thinking...' : hasApiKey ? 'AI-powered check-in' : 'Confidential check-in'}</div>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="text-white/60 text-xs">Q{Math.min(qIdxRef.current + 1, 4)}/4</div>
+            {qIdxRef.current > 0 && (
+              <>
+                {[0,1,2,3].map(i => (
+                  <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all ${i < qIdxRef.current ? 'bg-white' : 'bg-white/30'}`} />
+                ))}
+              </>
+            )}
           </div>
         </div>
 
@@ -621,8 +673,18 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
                 {/* Render widgets only if not done */}
                 {!msg.widgetDone && (
                   <>
-                    {msg.widget === 'moodwheel'   && <MoodWheel onSelect={handleMood} disabled={isLoading} />}
-                    {msg.widget === 'thoughtbubble' && <ThoughtBubble onSelect={handleThoughts} disabled={isLoading} />}
+                    {msg.widget === 'moodwheel'      && <MoodWheel onSelect={handleMood} disabled={isLoading} />}
+                    {msg.widget === 'thoughtbubble'  && <ThoughtBubble onSelect={handleThoughts} disabled={isLoading} />}
+                    {msg.widget === 'chatgpt-optional' && (
+                      <ChatGptOptional
+                        copied={copied} setCopied={setCopied}
+                        chatGptText={chatGptText} setChatGptText={setChatGptText}
+                        chatGptAdded={chatGptAdded}
+                        onSkip={handleChatGptSkip}
+                        onAdd={handleChatGptAdd}
+                        disabled={isLoading}
+                      />
+                    )}
                     {msg.widget === 'energyslider' && <EnergySlider onSelect={handleEnergy} disabled={isLoading} />}
                     {msg.widget === 'scale'        && <ScaleQuestion onSelect={handleScale} disabled={isLoading} />}
                     {msg.widget === 'breathing'    && <MiniBreathing onDone={handleBreathingDone} disabled={isLoading} />}
@@ -918,6 +980,9 @@ function Results({ scores, conversationLog, userContext, chatGptContext, onResta
 
           {/* Actions */}
           <div className="flex gap-3">
+            <button onClick={() => setTab?.('home')} className="flex items-center justify-center gap-1.5 border-2 border-[#d8d0c4] text-[#6b7265] hover:border-[#4a7c59] hover:text-[#4a7c59] py-3 px-5 rounded-full text-sm font-semibold transition-all">
+              Home
+            </button>
             <button onClick={onRestart} className="flex-1 flex items-center justify-center gap-1.5 border-2 border-[#4a7c59] text-[#4a7c59] hover:bg-[#4a7c59] hover:text-white py-3 rounded-full text-sm font-semibold transition-all">
               <RefreshCw size={14} /> Retake
             </button>

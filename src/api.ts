@@ -1,16 +1,27 @@
 /**
  * MindBridge API Client
  * Connects frontend to the Express/MongoDB backend
+ * Falls back gracefully when backend is unavailable (demo/offline mode)
  */
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL || 'http://localhost:4000/api';
 
-function getToken() {
+export function getToken(): string | null {
   return localStorage.getItem('mb_token');
+}
+
+export function isOfflineDemo(): boolean {
+  return getToken() === 'demo-token-offline';
 }
 
 async function request(path: string, options: RequestInit = {}) {
   const token = getToken();
+
+  // Don't make API calls with the fake demo token - they will 401
+  if (token === 'demo-token-offline' && path !== '/auth/login' && path !== '/auth/register') {
+    throw new Error('OFFLINE_MODE');
+  }
+
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
@@ -19,12 +30,13 @@ async function request(path: string, options: RequestInit = {}) {
       ...options.headers,
     },
   });
+
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`);
   return data;
 }
 
-// ─── AUTH ──────────────────────────────────────
+// ── AUTH ──────────────────────────────────────────────────────
 export const api = {
   auth: {
     login: (email: string, password: string) =>
@@ -36,7 +48,7 @@ export const api = {
     me: () => request('/auth/me'),
   },
 
-  // ─── SCREENINGS ──────────────────────────────
+  // ── SCREENINGS ────────────────────────────────────────────
   screenings: {
     save: (data: {
       phqScore: number; gadScore: number; riskLevel: string;
@@ -44,11 +56,10 @@ export const api = {
     }) => request('/screenings', { method: 'POST', body: JSON.stringify(data) }),
 
     myHistory: () => request('/screenings/my'),
-
     stats: () => request('/screenings/stats'),
   },
 
-  // ─── APPOINTMENTS ─────────────────────────────
+  // ── APPOINTMENTS ──────────────────────────────────────────
   appointments: {
     getDoctors: (critical = false) =>
       request(`/appointments/doctors${critical ? '?critical=true' : ''}`),
@@ -59,20 +70,19 @@ export const api = {
     }) => request('/appointments', { method: 'POST', body: JSON.stringify(data) }),
 
     myAppointments: () => request('/appointments/my'),
-
     allAppointments: () => request('/appointments/all'),
 
     updateStatus: (id: string, status: string) =>
       request(`/appointments/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   },
 
-  // ─── DASHBOARD ───────────────────────────────
+  // ── DASHBOARD ─────────────────────────────────────────────
   dashboard: {
     clinic: () => request('/dashboard/clinic'),
     admin: () => request('/dashboard/admin'),
   },
 
-  // ─── HEALTH CHECK ────────────────────────────
+  // ── HEALTH CHECK ──────────────────────────────────────────
   health: () => request('/health'),
 };
 
@@ -91,9 +101,7 @@ export function getStoredUser() {
   try {
     const u = localStorage.getItem('mb_user');
     return u ? JSON.parse(u) : null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 export function isLoggedIn() {
