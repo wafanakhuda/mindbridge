@@ -1,154 +1,155 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { ShieldCheck, Server, Users, Activity, Building2, AlertTriangle, CheckCircle2, Globe2, Download, Map, LayoutTemplate } from 'lucide-react';
-import { useState } from 'react';
+import { ShieldCheck, Server, Users, Activity, Building2, AlertTriangle, Globe2, LayoutTemplate, RefreshCw, Download } from 'lucide-react';
 import ArchitectureDocs from './ArchitectureDocs';
+import { api } from '../api';
+
+const SEED_ADMIN = { totalUsers: 5, totalScreenings: 10, totalAppointments: 10, crisisEvents: 1, doctors: 10, usersByRole: [{ _id: 'patient', count: 2 }, { _id: 'clinic', count: 2 }, { _id: 'admin', count: 1 }] };
 
 export default function AdminDashboard() {
   const [showDocs, setShowDocs] = useState(false);
+  const [data, setData] = useState(SEED_ADMIN);
+  const [loading, setLoading] = useState(true);
+  const [fromApi, setFromApi] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState('');
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await api.dashboard.admin();
+      setData(res);
+      setFromApi(true);
+    } catch {
+      setData(SEED_ADMIN);
+      setFromApi(false);
+    } finally {
+      setLoading(false);
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }
   };
 
-  if (showDocs) {
-    return <ArchitectureDocs onBack={() => setShowDocs(false)} />;
-  }
+  useEffect(() => { load(); }, []);
+
+  if (showDocs) return <ArchitectureDocs onBack={() => setShowDocs(false)} />;
+
+  const roleMap = Object.fromEntries((data.usersByRole || []).map((r: any) => [r._id, r.count]));
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-7xl mx-auto px-6 py-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="bg-[#7b1fa2] text-white p-2 rounded-xl shadow-md">
-              <ShieldCheck size={24} />
-            </div>
-            <h2 className="font-serif text-4xl text-[#2c3028]">Community Intelligence Dashboard</h2>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8">
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-[#7b1fa2] text-white p-2.5 rounded-xl shadow-md"><ShieldCheck size={22} /></div>
+          <div>
+            <h2 className="font-serif text-3xl text-[#2c3028]">System Administration</h2>
+            <p className="text-sm text-[#6b7265] flex items-center gap-1.5 mt-0.5">
+              <Server size={14} /> MindBridge Global Platform
+              {!fromApi && <span className="text-xs bg-[#fff8e1] text-[#f57f17] border border-[#ffe082] px-2 py-0.5 rounded-full ml-1">Sample data</span>}
+            </p>
           </div>
-          <p className="text-lg text-[#6b7265] flex items-center gap-2">
-            <Server size={18} /> MindBridge Global Platform · March 2026
-          </p>
         </div>
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setShowDocs(true)}
-            className="bg-white text-[#2c3028] px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm border border-[#d8d0c4] hover:bg-gray-50 transition-colors"
-          >
-            <LayoutTemplate size={16} /> System Specs & Docs
+        <div className="flex items-center gap-2">
+          {lastUpdated && <span className="text-xs text-[#6b7265] bg-white border border-[#d8d0c4] px-3 py-1.5 rounded-full">Updated {lastUpdated}</span>}
+          <button onClick={load} disabled={loading} className="flex items-center gap-1.5 bg-white border border-[#d8d0c4] text-[#2c3028] px-3 py-1.5 rounded-full text-xs font-medium hover:bg-[#f0ece5] transition-all">
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
           </button>
-          <button className="bg-[#4a7c59] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm hover:bg-[#234726] transition-colors">
-            <Download size={16} /> Export Reports
+          <button onClick={() => setShowDocs(true)} className="flex items-center gap-1.5 bg-white border border-[#d8d0c4] text-[#2c3028] px-3 py-1.5 rounded-full text-xs font-medium hover:bg-[#f0ece5] transition-all">
+            <LayoutTemplate size={13} /> System Docs
           </button>
         </div>
       </div>
 
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12"
-      >
-        <KpiCard icon={<Users size={20} />} num="2,847" label="Total Active Users" delta="↑ 312 this week" up color="bg-[#e3f2fd]" textColor="text-[#1565c0]" />
-        <KpiCard icon={<Building2 size={20} />} num="12" label="Partner Clinics" delta="↑ 2 this month" up color="bg-[#f3e5f5]" textColor="text-[#7b1fa2]" />
-        <KpiCard icon={<Activity size={20} />} num="8,492" label="Total Screenings" delta="↑ 1,204 this week" up color="bg-[#e8f5e9]" textColor="text-[#2e7d32]" />
-        <KpiCard icon={<AlertTriangle size={20} />} num="0" label="System Alerts" delta="All systems normal" up={true} color="bg-[#e8f5e9]" textColor="text-[#2e7d32]" />
-      </motion.div>
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <KpiCard icon={<Users size={16} />}         label="Total Users"        num={data.totalUsers}         color="bg-[#e3f2fd]" text="text-[#1565c0]" />
+        <KpiCard icon={<Activity size={16} />}      label="Total Screenings"   num={data.totalScreenings}    color="bg-[#e8f5e9]" text="text-[#2e7d32]" />
+        <KpiCard icon={<Building2 size={16} />}     label="Doctors"            num={data.doctors}            color="bg-[#f3e5f5]" text="text-[#7b1fa2]" />
+        <KpiCard icon={<Globe2 size={16} />}        label="Appointments"       num={data.totalAppointments}  color="bg-[#fff8e1]" text="text-[#f57f17]" />
+        <KpiCard icon={<AlertTriangle size={16} />} label="Crisis Events"      num={data.crisisEvents}       color="bg-[#fce4ec]" text="text-[#c62828]" alert />
+        <KpiCard icon={<ShieldCheck size={16} />}   label="System Alerts"      num={0}                       color="bg-[#e8f5e9]" text="text-[#2e7d32]" />
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white border border-[#d8d0c4] rounded-[2rem] p-8 shadow-sm relative overflow-hidden flex flex-col"
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#f0ece5] to-transparent rounded-bl-full pointer-events-none opacity-50"></div>
-          <div className="flex items-center justify-between mb-8 relative z-10">
-            <h4 className="font-bold text-2xl text-[#2c3028] flex items-center gap-3">
-              <Map className="text-[#c62828]" size={28} /> Regional Risk Heatmap
-            </h4>
-          </div>
-          <div className="flex-1 relative z-10 bg-[#f5f0e8] rounded-xl border border-[#e5ddd0] p-4 flex items-center justify-center min-h-[300px] overflow-hidden group">
-             {/* Simulated Map / Heatmap Graphic */}
-             <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-             <div className="relative w-full h-full">
-                <HeatmapNode top="20%" left="30%" size="w-16 h-16" color="bg-red-500" label="High Risk Cluster" />
-                <HeatmapNode top="50%" left="60%" size="w-24 h-24" color="bg-amber-500" label="Moderate Trend" />
-                <HeatmapNode top="70%" left="20%" size="w-12 h-12" color="bg-green-500" label="Low Risk" />
-                <HeatmapNode top="30%" left="80%" size="w-20 h-20" color="bg-red-500" label="Emerging Hotspot" />
-             </div>
-          </div>
-        </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="bg-white border border-[#d8d0c4] rounded-[2rem] p-8 shadow-sm flex flex-col"
-        >
-          <h4 className="font-bold text-2xl text-[#2c3028] mb-8 flex items-center gap-3">
-            <Globe2 className="text-[#1565c0]" size={28} /> Platform Usage by Region
-          </h4>
-          <div className="space-y-6 flex-1 flex flex-col justify-center">
-            <BarRow label="North America" count="18,402" pct={100} color="bg-[#1565c0]" />
-            <BarRow label="Europe" count="12,104" pct={65} color="bg-[#7baec8]" />
-            <BarRow label="Asia Pacific" count="8,492" pct={45} color="bg-[#2e7d32]" />
-            <BarRow label="Africa" count="4,201" pct={22} color="bg-[#f57f17]" />
-            <BarRow label="South America" count="2,722" pct={15} color="bg-[#c62828]" />
+        {/* Users by role */}
+        <div className="bg-white border border-[#d8d0c4] rounded-[1.5rem] p-6 shadow-sm">
+          <h3 className="font-bold text-[#2c3028] mb-4 flex items-center gap-2"><Users size={16} className="text-[#4a7c59]" /> Users by Role</h3>
+          <div className="space-y-3">
+            {[
+              { role: 'patient', label: 'Patients', color: 'bg-[#4a7c59]' },
+              { role: 'clinic',  label: 'Clinic Staff', color: 'bg-[#1565c0]' },
+              { role: 'admin',   label: 'Administrators', color: 'bg-[#7b1fa2]' },
+            ].map(r => {
+              const count = roleMap[r.role] || 0;
+              const total = data.totalUsers || 1;
+              return (
+                <div key={r.role}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-[#2c3028] font-medium">{r.label}</span>
+                    <span className="font-bold">{count}</span>
+                  </div>
+                  <div className="h-2.5 bg-[#f0ece5] rounded-full overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${(count / total) * 100}%` }}
+                      transition={{ duration: 1 }} className={`h-full ${r.color} rounded-full`} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </motion.div>
+        </div>
+
+        {/* System health */}
+        <div className="bg-white border border-[#d8d0c4] rounded-[1.5rem] p-6 shadow-sm">
+          <h3 className="font-bold text-[#2c3028] mb-4 flex items-center gap-2"><Server size={16} className="text-[#4a7c59]" /> System Health</h3>
+          <div className="space-y-2">
+            {[
+              { label: 'Frontend (React + Vite)', status: 'Operational', ok: true },
+              { label: 'API Server (Express)',     status: fromApi ? 'Connected' : 'Offline - using seed data', ok: fromApi },
+              { label: 'MongoDB Atlas',            status: fromApi ? 'Connected' : 'Check MONGODB_URI env var', ok: fromApi },
+              { label: 'Gemini AI Agents',         status: 'Check VITE_GEMINI_API_KEY', ok: true },
+              { label: 'Global Directory',         status: '195 countries loaded', ok: true },
+            ].map(s => (
+              <div key={s.label} className="flex items-center justify-between py-2 border-b border-[#f0ece5] last:border-0">
+                <span className="text-xs text-[#2c3028]">{s.label}</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.ok ? 'bg-[#e8f5e9] text-[#2e7d32]' : 'bg-[#fce4ec] text-[#c62828]'}`}>
+                  {s.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Deploy checklist */}
+      <div className="bg-gradient-to-br from-[#2c3028] to-[#3a4035] rounded-[1.5rem] p-6 text-white">
+        <h3 className="font-bold mb-4 flex items-center gap-2"><ShieldCheck size={16} /> Production Checklist</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+          {[
+            { label: 'VITE_GEMINI_API_KEY set in Railway',        done: false, note: 'aistudio.google.com/app/apikey (free)' },
+            { label: 'MONGODB_URI set in Railway',                done: fromApi, note: 'cloud.mongodb.com (free cluster)' },
+            { label: 'JWT_SECRET set to long random string',      done: fromApi, note: 'Any 32+ char random string' },
+            { label: 'VITE_API_URL set to Railway backend URL',   done: fromApi, note: 'https://your-app.railway.app/api' },
+            { label: 'Run npm run seed after first deploy',       done: fromApi, note: 'Creates demo accounts + 10 sample records' },
+            { label: 'Frontend deployed and accessible',          done: true,    note: 'Railway/Netlify/Vercel' },
+          ].map(item => (
+            <div key={item.label} className={`flex items-start gap-2 p-2.5 rounded-xl ${item.done ? 'bg-white/10' : 'bg-white/5'}`}>
+              <span className={`text-base shrink-0 ${item.done ? 'text-[#4a7c59]' : 'text-white/40'}`}>{item.done ? '✓' : '○'}</span>
+              <div>
+                <div className={`font-medium ${item.done ? 'text-white' : 'text-white/60'}`}>{item.label}</div>
+                <div className="text-white/40 text-[10px]">{item.note}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
 }
 
-const HeatmapNode = ({ top, left, size, color, label }: any) => (
-  <div className="absolute flex flex-col items-center justify-center group/node" style={{ top, left, transform: 'translate(-50%, -50%)' }}>
-    <div className={`${size} ${color} rounded-full opacity-40 animate-pulse absolute`}></div>
-    <div className={`w-4 h-4 ${color} rounded-full border-2 border-white shadow-md relative z-10`}></div>
-    <div className="absolute top-full mt-2 bg-white px-2 py-1 rounded shadow-sm text-xs font-bold whitespace-nowrap opacity-0 group-hover/node:opacity-100 transition-opacity z-20">
-      {label}
-    </div>
-  </div>
-);
-
-const KpiCard = ({ icon, num, label, delta, up, color, textColor }: any) => (
-  <motion.div 
-    variants={{
-      hidden: { opacity: 0, y: 20 },
-      show: { opacity: 1, y: 0 }
-    }}
-    className="bg-white border border-[#d8d0c4] rounded-[1.5rem] p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group"
-  >
-    <div className={`absolute -right-4 -top-4 w-16 h-16 rounded-full ${color} opacity-50 group-hover:scale-150 transition-transform duration-500`}></div>
-    <div className={`w-10 h-10 rounded-xl ${color} ${textColor} flex items-center justify-center mb-4 relative z-10 shadow-sm`}>
-      {icon}
-    </div>
-    <div className="font-serif text-4xl font-bold text-[#2c3028] mb-2 relative z-10">{num}</div>
-    <div className="text-xs text-[#6b7265] uppercase tracking-wider font-bold mb-3 relative z-10">{label}</div>
-    <div className={`text-sm font-bold flex items-center gap-1 relative z-10 ${up ? 'text-[#2e7d32]' : 'text-[#c62828]'}`}>
-      <span className={`px-2 py-0.5 rounded-md ${up ? 'bg-[#e8f5e9]' : 'bg-[#ffebee]'}`}>{delta}</span> vs last month
-    </div>
-  </motion.div>
-);
-
-const BarRow = ({ label, count, pct, color }: any) => (
-  <div className="flex items-center gap-4 text-sm group">
-    <div className="w-32 flex items-center gap-2 text-[#6b7265] font-medium group-hover:text-[#2c3028] transition-colors">
-      {label}
-    </div>
-    <div className="flex-1 bg-[#f0ece5] h-4 rounded-full overflow-hidden shadow-inner">
-      <motion.div 
-        initial={{ width: 0 }} 
-        animate={{ width: `${pct}%` }} 
-        transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }} 
-        className={`h-full ${color} relative overflow-hidden`}
-      >
-        <div className="absolute inset-0 bg-white/20 w-full h-full -translate-x-full animate-[shimmer_2s_infinite]"></div>
-      </motion.div>
-    </div>
-    <div className="w-16 text-right font-bold text-lg text-[#2c3028]">{count}</div>
+const KpiCard = ({ icon, num, label, color, text, alert = false }: any) => (
+  <div className={`${color} rounded-2xl p-4 ${alert && num > 0 ? 'ring-2 ring-offset-1 ring-[#c62828]/30' : ''}`}>
+    <div className={`${text} mb-1`}>{icon}</div>
+    <div className={`font-serif text-3xl font-bold ${text}`}>{num}</div>
+    <div className="text-[10px] text-[#6b7265] uppercase tracking-wider mt-0.5 font-medium leading-tight">{label}</div>
   </div>
 );

@@ -3,12 +3,12 @@ import { Globe2, ExternalLink, BookOpen, Megaphone } from 'lucide-react';
 
 const NGOS = [
   { name: 'Mental Health Innovation Network', region: 'Global', focus: 'Connecting innovators working on mental health solutions in low-resource settings', link: 'https://www.mhinnovation.net', tag: 'Innovation', color: 'bg-[#e3f2fd] border-[#bbdefb] text-[#1565c0]' },
-  { name: 'WHO Mental Health Action Plan', region: 'Global', focus: 'Global framework for mental health policy, service delivery, and research 2013–2030', link: 'https://www.who.int/publications/i/item/9789241506021', tag: 'Policy', color: 'bg-[#e8f5e9] border-[#c8e6c9] text-[#2e7d32]' },
+  { name: 'WHO Mental Health Action Plan', region: 'Global', focus: 'Global framework for mental health policy, service delivery, and research 2013-2030', link: 'https://www.who.int/publications/i/item/9789241506021', tag: 'Policy', color: 'bg-[#e8f5e9] border-[#c8e6c9] text-[#2e7d32]' },
   { name: 'Befrienders Worldwide', region: 'Global', focus: 'Emotional support to people in distress. Volunteer crisis lines in 32 countries', link: 'https://www.befrienders.org', tag: 'Crisis Support', color: 'bg-[#fce4ec] border-[#f8bbd0] text-[#c62828]' },
   { name: 'BasicNeeds', region: 'Africa & Asia', focus: 'Community-based mental health and development for underserved populations', link: 'https://www.basicneeds.org', tag: 'Community', color: 'bg-[#fff8e1] border-[#ffe082] text-[#f57f17]' },
   { name: 'CBM Global', region: 'Low-income countries', focus: 'Inclusive development and disability-inclusive mental health in fragile contexts', link: 'https://www.cbm.org', tag: 'Inclusion', color: 'bg-[#f3e5f5] border-[#e1bee7] text-[#7b1fa2]' },
   { name: 'Africa Mental Health Foundation', region: 'Africa', focus: 'Research and capacity building for mental health in sub-Saharan Africa', link: 'https://www.amhf.or.ke', tag: 'Research', color: 'bg-[#e8f5e9] border-[#c8e6c9] text-[#2e7d32]' },
-  { name: 'iCall — Tata Institute', region: 'South Asia', focus: 'Psychosocial helpline and counselling services for India and South Asia', link: 'https://icallhelpline.org', tag: 'Helpline', color: 'bg-[#e3f2fd] border-[#bbdefb] text-[#1565c0]' },
+  { name: 'iCall - Tata Institute', region: 'South Asia', focus: 'Psychosocial helpline and counselling services for India and South Asia', link: 'https://icallhelpline.org', tag: 'Helpline', color: 'bg-[#e3f2fd] border-[#bbdefb] text-[#1565c0]' },
   { name: 'HealthRight International', region: 'Global', focus: 'Mental health and human rights for marginalised communities in conflict zones', link: 'https://healthright.org', tag: 'Human Rights', color: 'bg-[#fce4ec] border-[#f8bbd0] text-[#c62828]' },
 ];
 
@@ -24,7 +24,7 @@ const TOOLKITS = [
 const CAMPAIGNS = [
   { emoji: '🟢', name: 'World Mental Health Day', date: '10 October', org: 'WHO', desc: 'Annual awareness day. Free campaign materials, social media assets, and event guides available.' },
   { emoji: '🔵', name: 'Time to Change', date: 'Year-round', org: 'Mind UK', desc: 'Anti-stigma campaign toolkit for workplaces, schools, and communities.' },
-  { emoji: '🟡', name: "Bell Let's Talk", date: 'January', org: 'Bell Canada', desc: 'Framework for starting mental health conversations — adaptable for any community.' },
+  { emoji: '🟡', name: "Bell Let's Talk", date: 'January', org: 'Bell Canada', desc: 'Framework for starting mental health conversations - adaptable for any community.' },
   { emoji: '🟣', name: 'Heads Together', date: 'Year-round', org: 'Royal Foundation UK', desc: 'Campaign normalising mental health conversations. Free assets and ambassador guides.' },
 ];
 
@@ -80,7 +80,7 @@ export default function Community({ setTab }: { setTab?: (tab: string) => void }
         <h3 className="font-serif text-2xl text-[#2c3028] mb-2 flex items-center gap-2">
           <BookOpen size={22} className="text-[#4a7c59]" /> Free Clinical & Community Toolkits
         </h3>
-        <p className="text-[#6b7265] text-sm mb-6">Open-access toolkits from WHO and global health organisations — free to use, share, and adapt.</p>
+        <p className="text-[#6b7265] text-sm mb-6">Open-access toolkits from WHO and global health organisations - free to use, share, and adapt.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {TOOLKITS.map((t, i) => (
             <motion.a key={t.title} href={t.link} target="_blank" rel="noopener noreferrer"
@@ -112,7 +112,7 @@ export default function Community({ setTab }: { setTab?: (tab: string) => void }
                 <div className="text-2xl">{c.emoji}</div>
                 <div>
                   <div className="font-bold text-[#2c3028] text-sm">{c.name}</div>
-                  <div className="text-xs text-[#6b7265] mb-1">{c.org} · {c.date}</div>
+                  <div className="text-xs text-[#6b7265] mb-1">{c.org} - {c.date}</div>
                   <p className="text-xs text-[#6b7265] leading-relaxed">{c.desc}</p>
                 </div>
               </div>

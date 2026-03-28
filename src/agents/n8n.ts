@@ -1,5 +1,5 @@
 /**
- * MindBridge — n8n Integration Layer
+ * MindBridge - n8n Integration Layer
  *
  * When N8N_WEBHOOK_URL is set, ALL agent calls go through n8n
  * which orchestrates Gemini + DB + follow-up automatically.
@@ -13,7 +13,7 @@ const N8N_URL = (import.meta as any).env?.VITE_N8N_WEBHOOK_URL || '';
 export const usingN8n = !!N8N_URL;
 
 // ─────────────────────────────────────────────────────────
-// Call n8n triage webhook — used on first user message
+// Call n8n triage webhook - used on first user message
 // ─────────────────────────────────────────────────────────
 export async function n8nTriage(message: string, userId = 'anon'): Promise<string> {
   const res = await fetch(N8N_URL, {
@@ -32,7 +32,7 @@ export async function n8nTriage(message: string, userId = 'anon'): Promise<strin
 }
 
 // ─────────────────────────────────────────────────────────
-// Call n8n results webhook — after all 4 questions answered
+// Call n8n results webhook - after all 4 questions answered
 // Returns full risk analysis + personalised steps
 // ─────────────────────────────────────────────────────────
 export async function n8nAnalyse(payload: {
@@ -63,7 +63,7 @@ export async function n8nAnalyse(payload: {
 }
 
 // ─────────────────────────────────────────────────────────
-// Call n8n free text webhook — for mid-screening messages
+// Call n8n free text webhook - for mid-screening messages
 // ─────────────────────────────────────────────────────────
 export async function n8nFreeText(message: string, context: string): Promise<string> {
   const res = await fetch(N8N_URL, {

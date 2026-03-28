@@ -1,398 +1,664 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Send, Copy, Check, BookOpen, Calendar, Sparkles, Bot, RefreshCw, Phone } from 'lucide-react';
 import Disclaimer from './Disclaimer';
-import { MessageCircle, Send, RefreshCw, ArrowRight, Sparkles, Bot, ClipboardPaste, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
-import { TriageAgent, RiskAgent, CareNavigatorAgent, TherapyAgent, FollowUpAgent, FreeTextAgent, type RiskAnalysis, type TherapyIntervention } from '../agents/gemini';
+import {
+  TriageAgent, ConversationalScreener, BridgeAgent,
+  RiskAgent, TherapyAgent, CareNavigatorAgent, FollowUpAgent, FreeTextAgent,
+  hasApiKey, type RiskAnalysis, type TherapyIntervention,
+} from '../agents/gemini';
+import AppointmentBooking from './AppointmentBooking';
 
+// ─────────────────────────────────────────────────────────────────
+// CHATGPT HISTORY PROMPT
+// ─────────────────────────────────────────────────────────────────
 const CHATGPT_PROMPT = `Please summarise my mental health history from our conversations. Include:
-1. Main concerns and symptoms I have mentioned (anxiety, depression, stress, sleep issues, etc.)
-2. How long I have been experiencing these issues
-3. Any triggers or difficult situations I have described
-4. Coping strategies I have tried or mentioned
-5. Any significant life events or stressors I shared
-6. How my mood or symptoms have changed over time
+1. Main concerns and symptoms I mentioned (anxiety, depression, sleep, stress, mood)
+2. How long I have been experiencing these
+3. Triggers or difficult situations I described
+4. Coping strategies I mentioned trying
+5. Significant life events or stressors I shared
+6. How my mood or symptoms changed over time
 
-Please be concise and clinical — this summary will be used by a mental health screening tool to give me more accurate, personalised results. Do not include any advice, just summarise what I have shared with you.`;
+Be concise and clinical. This will be used by a mental health screening tool to personalise my results. Do not give advice, just summarise what I told you.`;
 
-const PHQ_QUESTIONS = [
-  "Over the last 2 weeks, how often have you been bothered by **little interest or pleasure in doing things**?",
-  "Over the last 2 weeks, how often have you been bothered by **feeling down, depressed, or hopeless**?"
-];
-const GAD_QUESTIONS = [
-  "Over the last 2 weeks, how often have you been bothered by **feeling nervous, anxious or on edge**?",
-  "Over the last 2 weeks, how often have you been bothered by **not being able to stop or control worrying**?"
-];
-const FREQ_OPTIONS = [
-  { text: "Not at all", val: 0 },
-  { text: "Several days", val: 1 },
-  { text: "More than half the days", val: 2 },
-  { text: "Nearly every day", val: 3 }
-];
+// ─────────────────────────────────────────────────────────────────
+// WIDGETS
+// ─────────────────────────────────────────────────────────────────
+function MoodWheel({ onSelect, disabled }: { onSelect: (m: string, v: number) => void; disabled: boolean }) {
+  const moods = [
+    { label: 'Great', emoji: '😄', val: 0 },
+    { label: 'Okay', emoji: '🙂', val: 1 },
+    { label: 'Meh', emoji: '😐', val: 2 },
+    { label: 'Low', emoji: '😟', val: 3 },
+    { label: 'Struggling', emoji: '😔', val: 4 },
+    { label: 'Not coping', emoji: '😢', val: 5 },
+  ];
+  const [picked, setPicked] = useState<string | null>(null);
+  return (
+    <div className="w-full mt-2">
+      <p className="text-xs text-[#6b7265] mb-2 text-center">Tap the one that fits right now</p>
+      <div className="grid grid-cols-3 gap-2">
+        {moods.map(m => (
+          <motion.button key={m.label} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.95 }}
+            disabled={disabled || picked !== null}
+            onClick={() => { setPicked(m.label); onSelect(m.label, m.val); }}
+            className={`flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition-all
+              ${picked === m.label ? 'border-[#4a7c59] bg-[#e8f5e9]' : 'border-[#d8d0c4] bg-white hover:border-[#4a7c59]/60'}
+              ${(disabled || (picked && picked !== m.label)) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+            <span className="text-2xl">{m.emoji}</span>
+            <span className="text-xs font-semibold text-[#2c3028]">{m.label}</span>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-const INTRO_OPTIONS = ["I've been feeling anxious lately", "I'm going through a tough time", "Just want to check in on myself", "I've been feeling low"];
+function ThoughtBubble({ onSelect, disabled }: { onSelect: (v: string) => void; disabled: boolean }) {
+  const thoughts = [
+    "I can't stop worrying", "I feel empty inside", "I'm exhausted all the time",
+    "I feel disconnected", "I can't concentrate", "I feel hopeless",
+    "I'm more irritable", "I feel physically tense", "I'm managing okay", "None of these"
+  ];
+  const [selected, setSelected] = useState<string[]>([]);
+  const [submitted, setSubmitted] = useState(false);
+  const toggle = (t: string) => {
+    if (submitted || disabled) return;
+    setSelected(s => s.includes(t) ? s.filter(x => x !== t) : [...s, t]);
+  };
+  const submit = () => {
+    if (submitted) return;
+    setSubmitted(true);
+    onSelect(selected.length > 0 ? selected.join(', ') : 'None of these apply to me');
+  };
+  return (
+    <div className="w-full mt-2">
+      <p className="text-xs text-[#6b7265] mb-2 text-center">Select all that feel true for you (pick as many as you like)</p>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {thoughts.map(t => (
+          <motion.button key={t} whileTap={{ scale: 0.96 }}
+            disabled={submitted || disabled}
+            onClick={() => toggle(t)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all
+              ${selected.includes(t) ? 'bg-[#4a7c59] border-[#4a7c59] text-white' : 'bg-white border-[#d8d0c4] text-[#2c3028] hover:border-[#4a7c59]'}
+              ${(submitted || disabled) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}>
+            {t}
+          </motion.button>
+        ))}
+      </div>
+      {!submitted && (
+        <motion.button whileTap={{ scale: 0.97 }} onClick={submit}
+          className="w-full bg-[#4a7c59] text-white py-2.5 rounded-xl text-sm font-bold hover:bg-[#3a6b3e] transition-all">
+          {selected.length > 0 ? `These ${selected.length} resonate with me` : 'None of these apply'}
+        </motion.button>
+      )}
+    </div>
+  );
+}
 
-export default function Screening({ setTab }: { setTab?: (tab: string) => void }) {
-  const [messages, setMessages] = useState<any[]>([]);
-  const [step, setStep] = useState<'intro' | 'phq0' | 'phq1' | 'gad0' | 'gad1' | 'done'>('intro');
-  const [isTyping, setIsTyping] = useState(false);
-  const [scores, setScores] = useState({ phq: 0, gad: 0 });
-  const [showResults, setShowResults] = useState(false);
-  const [userContext, setUserContext] = useState('');
-  const [freeText, setFreeText] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [currentOptions, setCurrentOptions] = useState<any[]>([]);
-  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
-  const [historyText, setHistoryText] = useState('');
-  const [historyCopied, setHistoryCopied] = useState(false);
-  const [historySubmitted, setHistorySubmitted] = useState(false);
+function EnergySlider({ onSelect, disabled }: { onSelect: (v: string) => void; disabled: boolean }) {
+  const [val, setVal] = useState(5);
+  const [submitted, setSubmitted] = useState(false);
+  const labels = ['', 'Completely drained', 'Very low', 'Low', 'Below average', 'Average', 'Okay', 'Good', 'Very good', 'Energised', 'Full of energy'];
+  return (
+    <div className="w-full mt-2 bg-white rounded-2xl p-4 border border-[#d8d0c4]">
+      <p className="text-xs text-[#6b7265] mb-3 text-center">Slide to show your energy level this past week</p>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-lg">😴</span>
+        <input type="range" min="1" max="10" value={val} disabled={submitted || disabled}
+          onChange={e => setVal(+e.target.value)}
+          className="flex-1 accent-[#4a7c59] cursor-pointer" />
+        <span className="text-lg">⚡</span>
+      </div>
+      <p className="text-center text-sm font-bold text-[#2c3028] mb-3">{val}/10 - {labels[val]}</p>
+      {!submitted && (
+        <motion.button whileTap={{ scale: 0.97 }}
+          onClick={() => { setSubmitted(true); onSelect(`${val}/10 (${labels[val]})`); }}
+          className="w-full bg-[#4a7c59] text-white py-2 rounded-xl text-sm font-bold hover:bg-[#3a6b3e] transition-all">
+          That is my energy level
+        </motion.button>
+      )}
+    </div>
+  );
+}
+
+function SleepCheck({ onSelect, disabled }: { onSelect: (v: string) => void; disabled: boolean }) {
+  const opts = ['Less than 4 hrs', '4 to 5 hrs', '5 to 6 hrs', '6 to 7 hrs', '7 to 8 hrs', '8 or more hrs'];
+  const [picked, setPicked] = useState<string | null>(null);
+  return (
+    <div className="w-full mt-2">
+      <p className="text-xs text-[#6b7265] mb-2 text-center">How many hours are you sleeping most nights?</p>
+      <div className="grid grid-cols-2 gap-2">
+        {opts.map(o => (
+          <motion.button key={o} whileTap={{ scale: 0.97 }}
+            disabled={disabled || picked !== null}
+            onClick={() => { setPicked(o); onSelect(o); }}
+            className={`py-2.5 rounded-xl border-2 text-xs font-semibold transition-all text-center
+              ${picked === o ? 'bg-[#4a7c59] border-[#4a7c59] text-white' : 'bg-white border-[#d8d0c4] text-[#2c3028] hover:border-[#4a7c59]'}
+              ${(disabled || (picked && picked !== o)) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+            {o}
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ScaleQuestion({ onSelect, disabled }: { onSelect: (o: { text: string; val: number }) => void; disabled: boolean }) {
+  const opts = [
+    { text: 'Not at all', emoji: '😊', val: 0, color: 'border-[#4a7c59] hover:bg-[#e8f5e9]' },
+    { text: 'Several days', emoji: '😐', val: 1, color: 'border-[#c4a040] hover:bg-[#fff8e1]' },
+    { text: 'More than half the days', emoji: '😟', val: 2, color: 'border-[#d4843a] hover:bg-[#fff3e0]' },
+    { text: 'Nearly every day', emoji: '😔', val: 3, color: 'border-[#c4605a] hover:bg-[#fce4ec]' },
+  ];
+  const [picked, setPicked] = useState<number | null>(null);
+  return (
+    <div className="w-full mt-2 space-y-2">
+      {opts.map(o => (
+        <motion.button key={o.text} whileTap={{ scale: 0.98 }}
+          disabled={disabled || picked !== null}
+          onClick={() => { setPicked(o.val); onSelect(o); }}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border-2 bg-white transition-all text-left
+            ${picked === o.val ? 'border-[#4a7c59] bg-[#e8f5e9]' : o.color}
+            ${(disabled || (picked !== null && picked !== o.val)) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
+          <span className="text-xl">{o.emoji}</span>
+          <span className="font-semibold text-sm text-[#2c3028]">{o.text}</span>
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
+// Breathing mini-game during mid-screening break
+function MiniBreathing({ onDone, disabled }: { onDone: () => void; disabled: boolean }) {
+  const [running, setRunning] = useState(false);
+  const [phase, setPhase] = useState(0);
+  const [count, setCount] = useState(4);
+  const [cycles, setCycles] = useState(0);
+  const phases = ['Breathe In', 'Hold', 'Breathe Out', 'Hold'];
+  const colors = ['#4a7c59', '#7baec8', '#d4843a', '#c4a040'];
+  const intervalRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (!running) return;
+    intervalRef.current = setInterval(() => {
+      setCount(c => {
+        if (c <= 1) {
+          setPhase(p => {
+            const next = (p + 1) % 4;
+            if (next === 0) setCycles(cy => cy + 1);
+            return next;
+          });
+          return 4;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [running, phase]);
+
+  if (cycles >= 2) {
+    return (
+      <div className="w-full mt-2 bg-white rounded-2xl p-4 border border-[#d8d0c4] text-center">
+        <p className="text-2xl mb-2">✅</p>
+        <p className="font-bold text-[#4a7c59] text-sm mb-3">Well done - 2 cycles complete!</p>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={onDone}
+          className="bg-[#4a7c59] text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-[#3a6b3e] transition-all">
+          Continue the check-in
+        </motion.button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full mt-2 bg-white rounded-2xl p-4 border border-[#d8d0c4] text-center">
+      <p className="text-xs text-[#6b7265] mb-3">Box breathing - a quick 4-4-4-4 technique to ground yourself</p>
+      <div className="relative w-24 h-24 mx-auto mb-3 flex items-center justify-center">
+        <motion.div className="absolute inset-0 rounded-full opacity-20"
+          animate={{ scale: running ? (phase % 2 === 0 ? 1.4 : 0.8) : 1 }}
+          transition={{ duration: 3.5, ease: 'easeInOut' }}
+          style={{ backgroundColor: colors[phase] }} />
+        <motion.div className="absolute w-16 h-16 rounded-full opacity-40"
+          animate={{ scale: running ? (phase % 2 === 0 ? 1.3 : 0.7) : 1 }}
+          transition={{ duration: 3.5, ease: 'easeInOut' }}
+          style={{ backgroundColor: colors[phase] }} />
+        <div className="relative z-10 text-center">
+          <div className="font-serif text-2xl font-bold text-[#2c3028]">{running ? count : '·'}</div>
+          <div className="text-xs text-[#6b7265]">{running ? phases[phase] : 'Ready'}</div>
+        </div>
+      </div>
+      <p className="text-xs text-[#6b7265] mb-3">Cycles: {cycles}/2</p>
+      {!running ? (
+        <motion.button whileTap={{ scale: 0.97 }} onClick={() => setRunning(true)}
+          className="bg-[#4a7c59] text-white px-6 py-2 rounded-full text-sm font-bold hover:bg-[#3a6b3e] transition-all">
+          Start breathing
+        </motion.button>
+      ) : (
+        <button onClick={() => { clearInterval(intervalRef.current); setRunning(false); }}
+          className="text-xs text-[#6b7265] hover:text-[#2c3028] underline">Pause</button>
+      )}
+      <div className="mt-2">
+        <button onClick={onDone} className="text-xs text-[#6b7265] hover:underline">Skip - continue check-in</button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// MAIN SCREENING COMPONENT
+// ─────────────────────────────────────────────────────────────────
+export default function Screening({ setTab, currentUser }: { setTab?: (tab: string) => void; currentUser?: any }) {
+  const [phase, setPhase]         = useState<'chatgpt' | 'chat' | 'results'>('chatgpt');
+  const [messages, setMessages]   = useState<any[]>([]);
+  const [isTyping, setIsTyping]   = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [freeText, setFreeText]   = useState('');
+
+  // ChatGPT panel
+  const [chatGptText, setChatGptText]         = useState('');
+  const [chatGptAdded, setChatGptAdded]       = useState(false);
+  const [copied, setCopied]                   = useState(false);
+
+  // Use refs for values needed inside async handlers to avoid stale closure
+  const qIdxRef    = useRef(0);  // Current question 0-3
+  const phqRef     = useRef(0);  // Running PHQ score
+  const gadRef     = useRef(0);  // Running GAD score
+  const logRef     = useRef(''); // Full conversation log
+  const contextRef = useRef(''); // User context summary
+  const chatGptRef = useRef(''); // ChatGPT history text
+
+  // Final scores for Results
+  const [finalScores, setFinalScores] = useState({ phq: 0, gad: 0 });
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  useEffect(() => {
-    // Opening message
-    setTimeout(() => {
-      addBotMessage(
-        "Hello 👋 Welcome to MindBridge. I'm here to offer a brief, confidential mental health check-in.\n\nThis takes about 3–4 minutes and is completely anonymous. How are you feeling today?",
-        INTRO_OPTIONS
-      );
-    }, 600);
+  // Keep chatGptRef in sync
+  useEffect(() => { chatGptRef.current = chatGptText; }, [chatGptText]);
+
+  const addBot = useCallback((text: string, widget?: string) => {
+    setMessages(prev => [...prev, { id: Date.now() + Math.random(), sender: 'bot', text, widget }]);
   }, []);
 
-  const addBotMessage = (text: string, options: any[] = []) => {
-    setMessages(prev => [...prev, { sender: 'bot', text, options, id: Date.now() + Math.random() }]);
-    setCurrentOptions(options);
-  };
-
-  const addUserMessage = (text: string) => {
-    // Clear options on last bot message
+  const addUser = useCallback((text: string) => {
     setMessages(prev => {
-      const msgs = [...prev];
-      if (msgs.length > 0) msgs[msgs.length - 1].options = [];
-      return [...msgs, { sender: 'user', text, id: Date.now() + Math.random() }];
+      const m = [...prev];
+      // Disable any active widgets in previous messages
+      if (m.length > 0) m[m.length - 1] = { ...m[m.length - 1], widgetDone: true };
+      return [...m, { id: Date.now() + Math.random(), sender: 'user', text }];
     });
-    setCurrentOptions([]);
-  };
+    logRef.current += `\nUser: ${text}`;
+  }, []);
 
-  const showTyping = (ms = 1200) => new Promise<void>(resolve => {
+  const typing = (ms = 900) => new Promise<void>(res => {
     setIsTyping(true);
-    setTimeout(() => { setIsTyping(false); resolve(); }, ms);
+    setTimeout(() => { setIsTyping(false); res(); }, ms);
   });
 
-  // Handle intro option selected — calls TriageAgent
-  const handleIntro = async (option: string) => {
-    addUserMessage(option);
-    setUserContext(option);
-    setIsAiLoading(true);
-
-    await showTyping(800);
-
-    try {
-      const contextWithHistory = historyText
-        ? `User said: "${option}". Previous mental health history from ChatGPT: ${historyText}`
-        : option;
-      const aiResponse = await TriageAgent(contextWithHistory);
-      addBotMessage(aiResponse + '\n\nLet me ask you a few short questions. 🌿');
-    } catch {
-      addBotMessage("Thank you for sharing that with me. 🌿\n\nLet me ask you a few short questions to better understand how you've been feeling.");
-    }
-
-    setIsAiLoading(false);
-    await showTyping(600);
-    setStep('phq0');
-    addBotMessage(PHQ_QUESTIONS[0], FREQ_OPTIONS);
+  // ── PHASE: start chat ────────────────────────────────────────
+  const startChat = async () => {
+    contextRef.current = chatGptRef.current ? `ChatGPT history: ${chatGptRef.current}` : '';
+    setPhase('chat');
+    await typing(600);
+    addBot("Hello 👋 I am glad you are here. Let me check in with you. How are you feeling today?", 'moodwheel');
   };
 
-  // Handle PHQ/GAD option
-  const handleFreqOption = async (option: { text: string; val: number }, questionType: string) => {
-    addUserMessage(option.text);
+  // ── WIDGET: mood wheel ───────────────────────────────────────
+  const handleMood = async (mood: string, val: number) => {
+    addUser(`I am feeling ${mood}`);
+    contextRef.current += `. Mood: ${mood} (${val}/5)`;
 
-    if (questionType === 'phq0') {
-      setScores(s => ({ ...s, phq: s.phq + option.val }));
-      await showTyping();
-      setStep('phq1');
-      addBotMessage(PHQ_QUESTIONS[1], FREQ_OPTIONS);
+    // TriageAgent - Agent 1
+    setIsLoading(true);
+    await typing(600);
+    const ctx = chatGptRef.current
+      ? `User feels "${mood}". Background: ${chatGptRef.current}`
+      : `User feels "${mood}"`;
+    const triage = await TriageAgent(ctx);
+    setIsLoading(false);
 
-    } else if (questionType === 'phq1') {
-      setScores(s => ({ ...s, phq: s.phq + option.val }));
-      await showTyping();
-      setStep('gad0');
-      addBotMessage(GAD_QUESTIONS[0], FREQ_OPTIONS);
+    if (triage) {
+      addBot(triage);
+      await typing(500);
+    }
 
-    } else if (questionType === 'gad0') {
-      setScores(s => ({ ...s, gad: s.gad + option.val }));
-      await showTyping();
-      setStep('gad1');
-      addBotMessage(GAD_QUESTIONS[1], FREQ_OPTIONS);
+    addBot("To help me understand you better, which of these thoughts feel true for you right now?", 'thoughtbubble');
+  };
 
-    } else if (questionType === 'gad1') {
-      const newGad = scores.gad + option.val;
-      setScores(s => ({ ...s, gad: newGad }));
-      setStep('done');
-      await showTyping(800);
-      addBotMessage("Thank you for answering those questions. Let me analyse your responses now… 🌿");
-      await showTyping(2000);
-      setShowResults(true);
+  // ── WIDGET: thought bubble ───────────────────────────────────
+  const handleThoughts = async (thoughts: string) => {
+    addUser(thoughts);
+    contextRef.current += `. Thoughts: ${thoughts}`;
+
+    await typing(700);
+    addBot("Thank you for being honest with me. I am going to ask you 4 short questions now. First though - how has your energy been?", 'energyslider');
+  };
+
+  // ── WIDGET: energy slider ────────────────────────────────────
+  const handleEnergy = async (energy: string) => {
+    addUser(`Energy: ${energy}`);
+    contextRef.current += `. Energy: ${energy}`;
+    await typing(400);
+    await askQuestion(0);
+  };
+
+  // ── ASK NEXT QUESTION (non-linear via ConversationalScreener) ─
+  const askQuestion = async (idx: number) => {
+    qIdxRef.current = idx;
+    setIsLoading(true);
+
+    const lastUserLine = logRef.current.split('\n').filter(l => l.startsWith('User:')).slice(-1)[0] || '';
+    // Agent 2: ConversationalScreener generates personalised question based on previous answer
+    const result = await ConversationalScreener(idx, lastUserLine, logRef.current, chatGptRef.current);
+    setIsLoading(false);
+
+    await typing(500);
+    addBot(result.question, 'scale');
+  };
+
+  // ── WIDGET: scale answer ─────────────────────────────────────
+  const handleScale = async (option: { text: string; val: number }) => {
+    const idx = qIdxRef.current; // read from ref - no stale closure
+    addUser(option.text);
+
+    // Update running scores via refs (no stale closure)
+    if (idx < 2) phqRef.current += option.val;
+    else gadRef.current += option.val;
+
+    logRef.current += `\nQ${idx + 1} (${idx < 2 ? 'PHQ' : 'GAD'}): ${option.text} (${option.val})`;
+
+    const next = idx + 1;
+
+    if (next < 4) {
+      const topics = ['feelings of low mood', 'feelings of anxiety', 'ability to stop worrying'];
+
+      // Agent 3: BridgeAgent - empathetic acknowledgment
+      setIsLoading(true);
+      const bridge = await BridgeAgent(option.text, topics[idx] || 'wellbeing');
+      setIsLoading(false);
+
+      if (bridge) {
+        await typing(400);
+        addBot(bridge);
+      }
+
+      // Mid-way break: mini breathing game + sleep check after Q2
+      if (next === 2) {
+        await typing(400);
+        addBot("You are doing great. Before the final two questions, would you like to try a quick breathing exercise?", 'breathing');
+      } else {
+        await askQuestion(next);
+      }
+    } else {
+      // All 4 done
+      await typing(800);
+      addBot("Thank you for sharing all of that. It takes courage to be honest about how you are feeling. Let me look at everything you told me...");
+      await typing(2200);
+      setFinalScores({ phq: phqRef.current, gad: gadRef.current });
+      setPhase('results');
     }
   };
 
-  // Handle free text input
+  // ── WIDGET: breathing done ───────────────────────────────────
+  const handleBreathingDone = async () => {
+    addUser("Done with breathing");
+    await typing(300);
+    addBot("How many hours are you sleeping most nights?", 'sleep');
+  };
+
+  // ── WIDGET: sleep ────────────────────────────────────────────
+  const handleSleep = async (sleep: string) => {
+    addUser(`Sleeping about ${sleep}`);
+    contextRef.current += `. Sleep: ${sleep}`;
+    await typing(300);
+    await askQuestion(2);
+  };
+
+  // ── FREE TEXT ────────────────────────────────────────────────
   const handleFreeText = async () => {
     const text = freeText.trim();
-    if (!text || isAiLoading) return;
+    if (!text || isLoading) return;
     setFreeText('');
-    addUserMessage(text);
-    setIsAiLoading(true);
-    await showTyping(900);
-    try {
-      const response = await FreeTextAgent(text, userContext);
-      addBotMessage(response);
-    } catch {
-      addBotMessage("Thank you for sharing that. I'm here to listen. Please continue with the screening when you're ready. 🌿");
-    }
-    setIsAiLoading(false);
+    addUser(text);
+    setIsLoading(true);
+    await typing(700);
+    const reply = await FreeTextAgent(text, contextRef.current + ' ' + logRef.current);
+    setIsLoading(false);
+    addBot(reply);
   };
 
-  const formatText = (text: string) => {
-    const parts = text.split(/(\*\*.*?\*\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="font-semibold text-[#2d5a45]">{part.slice(2, -2)}</strong>;
-      }
-      return <span key={i}>{part}</span>;
-    });
-  };
+  const formatText = (text: string) =>
+    text.split(/(\*\*.*?\*\*)/g).map((p, i) =>
+      p.startsWith('**') && p.endsWith('**')
+        ? <strong key={i} className="font-bold text-[#2d5a45]">{p.slice(2, -2)}</strong>
+        : <span key={i}>{p}</span>
+    );
 
-  if (showResults) {
+  // ─────────────────────────────────────────────────────────────
+  // PHASE: CHATGPT PANEL
+  // ─────────────────────────────────────────────────────────────
+  if (phase === 'chatgpt') {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-6">
+        <Disclaimer />
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-[2rem] border border-[#d8d0c4] shadow-xl overflow-hidden">
+
+          <div className="bg-gradient-to-br from-[#4a7c59] to-[#3a6b3e] p-6 text-white">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-4xl">🌿</span>
+              <div>
+                <h2 className="font-serif text-2xl font-bold">MindBridge Check-In</h2>
+                <p className="text-white/75 text-xs">Conversational - Personalised - Validated</p>
+              </div>
+            </div>
+            <p className="text-white/85 text-sm">
+              A non-linear mental health check-in using PHQ-2 and GAD-2 tools. Each question adapts to your previous answer. Takes 4-5 minutes.
+            </p>
+          </div>
+
+          <div className="p-5 space-y-4">
+            {!hasApiKey && (
+              <div className="bg-[#fff8e1] border-2 border-[#ffe082] rounded-xl p-3 flex gap-2.5 items-start">
+                <span className="text-lg shrink-0">⚠️</span>
+                <div className="text-xs text-[#2c3028]">
+                  <strong className="text-[#f57f17] block mb-0.5">AI running in fallback mode</strong>
+                  Add <code className="bg-[#f0ece5] px-1 rounded">VITE_GEMINI_API_KEY</code> to Railway env vars for live AI agents.
+                  Free key at <strong>aistudio.google.com/app/apikey</strong>
+                </div>
+              </div>
+            )}
+
+            {/* ChatGPT panel - prominent and always visible */}
+            <div className="bg-gradient-to-br from-[#f0fdf9] to-[#dcfce7] border-2 border-[#10a37f]/40 rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-9 h-9 bg-[#10a37f] rounded-xl flex items-center justify-center text-lg shrink-0">🤖</div>
+                <div>
+                  <div className="font-bold text-[#2c3028] text-sm">Have you spoken to ChatGPT about your mental health?</div>
+                  <div className="text-xs text-[#6b7265]">Adding your history makes results significantly more personalised</div>
+                </div>
+              </div>
+
+              {/* Step 1 */}
+              <div className="bg-white rounded-xl border border-[#bbf7d0] p-3 mb-3">
+                <div className="text-xs font-bold text-[#059669] mb-2">Step 1 - Copy this prompt and paste it into ChatGPT:</div>
+                <div className="bg-[#f0fdf4] rounded-lg p-2.5 border border-[#bbf7d0] mb-2">
+                  <pre className="text-[10px] text-[#2c3028] whitespace-pre-wrap font-mono leading-relaxed">{CHATGPT_PROMPT}</pre>
+                </div>
+                <motion.button whileTap={{ scale: 0.97 }}
+                  onClick={() => { navigator.clipboard.writeText(CHATGPT_PROMPT); setCopied(true); setTimeout(() => setCopied(false), 2500); }}
+                  className="w-full flex items-center justify-center gap-2 bg-[#10a37f] text-white px-4 py-2.5 rounded-full text-xs font-bold hover:bg-[#059669] transition-all">
+                  {copied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy Prompt for ChatGPT</>}
+                </motion.button>
+              </div>
+
+              {/* Step 2 */}
+              <div>
+                <div className="text-xs font-bold text-[#6b7265] mb-1.5">Step 2 - Paste ChatGPT's summary here <span className="font-normal">(optional but very helpful)</span>:</div>
+                <textarea value={chatGptText} onChange={e => setChatGptText(e.target.value)}
+                  placeholder="Paste the summary ChatGPT gave you here..."
+                  rows={3}
+                  className="w-full bg-white border-2 border-[#bbf7d0] rounded-xl p-3 text-xs focus:outline-none focus:border-[#10a37f] resize-none placeholder:text-[#a3a89f] transition-all" />
+                <AnimatePresence>
+                  {chatGptText.trim() && !chatGptAdded && (
+                    <motion.button initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                      onClick={() => setChatGptAdded(true)}
+                      className="mt-1.5 w-full flex items-center justify-center gap-2 bg-[#4a7c59] text-white py-2 rounded-full text-xs font-bold hover:bg-[#3a6b3e] transition-all overflow-hidden">
+                      <Check size={12} /> Add to my screening
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+                {chatGptAdded && (
+                  <div className="mt-1.5 text-xs text-[#4a7c59] font-bold flex items-center gap-1">
+                    <Check size={12} /> Added - screening will use this context
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
+              onClick={startChat}
+              className="w-full bg-[#4a7c59] hover:bg-[#3a6b3e] text-white py-4 rounded-2xl font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2">
+              🌿 {chatGptAdded ? 'Start Personalised Check-In' : 'Start Check-In'}
+            </motion.button>
+            <p className="text-center text-xs text-[#a3a89f]">4-5 minutes - anonymous and confidential</p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // PHASE: RESULTS
+  // ─────────────────────────────────────────────────────────────
+  if (phase === 'results') {
     return (
       <Results
-        scores={scores}
-        userContext={userContext}
+        scores={finalScores}
+        conversationLog={logRef.current}
+        userContext={contextRef.current}
+        chatGptContext={chatGptRef.current}
         setTab={setTab}
+        currentUser={currentUser}
         onRestart={() => {
+          setPhase('chatgpt');
           setMessages([]);
-          setStep('intro');
-          setScores({ phq: 0, gad: 0 });
-          setShowResults(false);
-          setUserContext('');
-          setTimeout(() => {
-            addBotMessage(
-              "Hello again 👋 Let's do another check-in. How are you feeling today?",
-              INTRO_OPTIONS
-            );
-          }, 400);
+          setFinalScores({ phq: 0, gad: 0 });
+          phqRef.current = 0;
+          gadRef.current = 0;
+          qIdxRef.current = 0;
+          logRef.current = '';
+          contextRef.current = '';
+          setChatGptText('');
+          setChatGptAdded(false);
         }}
       />
     );
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // PHASE: CHAT
+  // ─────────────────────────────────────────────────────────────
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto px-4 py-8">
-      <Disclaimer />
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-xl mx-auto px-4 py-4">
+      <div className="flex flex-col bg-white rounded-[2rem] shadow-2xl border border-[#d8d0c4] overflow-hidden"
+        style={{ height: '78vh', minHeight: '520px' }}>
 
-      {/* ChatGPT History Panel */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white border border-[#d8d0c4] rounded-2xl mb-4 overflow-hidden"
-      >
-        <button
-          onClick={() => setShowHistoryPanel(!showHistoryPanel)}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-[#fdfaf4] transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#10a37f]/10 flex items-center justify-center shrink-0">
-              <span className="text-lg">🤖</span>
-            </div>
-            <div>
-              <div className="font-bold text-[#2c3028] text-sm">Have you talked to ChatGPT about your mental health?</div>
-              <div className="text-xs text-[#6b7265]">Paste your history to get a more accurate, personalised screening</div>
-            </div>
+        {/* Chat Header */}
+        <div className="bg-[#4a7c59] px-4 py-3 flex items-center gap-3 shrink-0">
+          <div className="relative">
+            <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-lg">🌿</div>
+            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#25D366] border-2 border-white rounded-full" />
           </div>
-          {showHistoryPanel ? <ChevronUp size={18} className="text-[#6b7265] shrink-0" /> : <ChevronDown size={18} className="text-[#6b7265] shrink-0" />}
-        </button>
-
-        <AnimatePresence>
-          {showHistoryPanel && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="border-t border-[#f0ece5] p-4 space-y-4">
-                <div className="bg-[#f0fdf4] border border-[#86efac] rounded-xl p-4">
-                  <p className="text-sm text-[#166534] font-medium mb-3">
-                    Step 1 — Copy this prompt and paste it into ChatGPT:
-                  </p>
-                  <div className="bg-white border border-[#d1fae5] rounded-lg p-3 text-xs text-[#2c3028] font-mono leading-relaxed mb-3 whitespace-pre-wrap">
-                    {CHATGPT_PROMPT}
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(CHATGPT_PROMPT);
-                      setHistoryCopied(true);
-                      setTimeout(() => setHistoryCopied(false), 2500);
-                    }}
-                    className="flex items-center gap-2 bg-[#10a37f] text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-[#0d8a6d] transition-all"
-                  >
-                    {historyCopied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy Prompt</>}
-                  </button>
-                </div>
-
-                <div>
-                  <p className="text-sm text-[#6b7265] mb-2 font-medium">Step 2 — Paste ChatGPT's summary here:</p>
-                  <textarea
-                    value={historyText}
-                    onChange={e => setHistoryText(e.target.value)}
-                    placeholder="Paste ChatGPT's mental health summary here…"
-                    className="w-full bg-[#fdfaf4] border-2 border-[#f0ece5] rounded-xl p-3 text-sm focus:outline-none focus:border-[#7a9e7e] resize-none h-28 transition-all placeholder:text-[#a3a89f]"
-                  />
-                  <button
-                    disabled={!historyText.trim() || historySubmitted}
-                    onClick={() => {
-                      setUserContext(prev => prev + '\n\nChatGPT history summary: ' + historyText.trim());
-                      setHistorySubmitted(true);
-                      setShowHistoryPanel(false);
-                    }}
-                    className="mt-2 flex items-center gap-2 bg-[#4a7c59] disabled:bg-[#d8d0c4] text-white px-5 py-2 rounded-full text-sm font-bold transition-all"
-                  >
-                    {historySubmitted ? <><Check size={14} /> Added to screening</> : <><ClipboardPaste size={14} /> Add to my screening</>}
-                  </button>
-                </div>
-
-                {historySubmitted && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#e8f5e9] border border-[#a5d6a7] rounded-xl p-3 text-sm text-[#2d5a30] font-medium flex items-center gap-2">
-                    ✅ Your history has been added. The screening will use this for more personalised results.
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      <div className="bg-white/80 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-2xl border border-white/40 flex flex-col h-[650px]">
-        {/* Header */}
-        <div className="bg-white/90 backdrop-blur-md p-5 flex items-center justify-between border-b border-[#d8d0c4]/50">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#4d7a52] to-[#7a9e7e] flex items-center justify-center text-2xl shadow-md">🌿</div>
-              <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#25D366] border-2 border-white rounded-full"></div>
-            </div>
-            <div>
-              <h3 className="font-bold text-lg text-[#2c3028] flex items-center gap-2">
-                MindBridge Agent
-                <span className="text-xs bg-[#e8f5e9] text-[#2e7d32] px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-                  <Sparkles size={10} /> AI
-                </span>
-              </h3>
-              <p className="text-sm text-[#6b7265] flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-[#25D366] rounded-full animate-pulse"></span>
-                {isAiLoading ? 'Thinking…' : 'Online · Powered by Gemini'}
-              </p>
-            </div>
+          <div className="flex-1">
+            <div className="text-white font-bold text-sm">MindBridge</div>
+            <div className="text-white/65 text-xs">{isLoading ? 'Thinking...' : hasApiKey ? 'AI-powered check-in' : 'Confidential check-in'}</div>
           </div>
-          <a
-            href="https://wa.me/?text=Hi%20MindBridge,%20I%20need%20support"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] px-4 py-2 rounded-full text-sm font-semibold transition-colors"
-          >
-            <MessageCircle size={16} /> WhatsApp
-          </a>
+          <div className="flex items-center gap-1.5">
+            <div className="text-white/60 text-xs">Q{Math.min(qIdxRef.current + 1, 4)}/4</div>
+          </div>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-[#f5f0e8]/30">
+        {/* Progress */}
+        <div className="h-0.5 bg-[#e8f5e9] shrink-0">
+          <motion.div className="h-full bg-[#4a7c59]"
+            animate={{ width: `${(qIdxRef.current / 4) * 100}%` }}
+            transition={{ duration: 0.6, ease: 'easeOut' }} />
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: 'linear-gradient(180deg, #f7f3ed 0%, #fdfaf4 100%)' }}>
           <AnimatePresence initial={false}>
-            {messages.map((msg) => (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            {messages.map(msg => (
+              <motion.div key={msg.id}
+                initial={{ opacity: 0, y: 8, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-              >
+                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+
                 {msg.sender === 'bot' && (
-                  <div className="flex items-center gap-2 mb-1.5 ml-1">
-                    <Bot size={13} className="text-[#7a9e7e]" />
-                    <span className="text-xs text-[#6b7265] font-medium">MindBridge Agent</span>
+                  <div className="flex items-center gap-1 mb-1 ml-1">
+                    <Bot size={10} className="text-[#4a7c59]" />
+                    <span className="text-[10px] text-[#6b7265] font-medium">MindBridge</span>
                   </div>
                 )}
-                <div className={`max-w-[85%] rounded-2xl px-5 py-3.5 text-[15px] leading-relaxed shadow-sm ${
-                  msg.sender === 'user'
-                    ? 'bg-[#d4843a] text-white rounded-tr-sm'
-                    : 'bg-white text-[#2c3028] rounded-tl-sm border border-[#d8d0c4]/40'
-                }`}>
-                  {msg.text.split('\n').map((line: string, j: number) => (
-                    <React.Fragment key={j}>
-                      {formatText(line)}
-                      {j < msg.text.split('\n').length - 1 && <br />}
-                    </React.Fragment>
-                  ))}
-                </div>
 
-                {msg.options && msg.options.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.25 }}
-                    className="mt-3 flex flex-wrap gap-2"
-                  >
-                    {msg.options.map((opt: any, j: number) => (
-                      <button
-                        key={j}
-                        onClick={() => {
-                          if (step === 'intro') handleIntro(typeof opt === 'string' ? opt : opt.text);
-                          else if (['phq0','phq1','gad0','gad1'].includes(step)) handleFreqOption(opt, step);
-                        }}
-                        className="bg-white border border-[#7a9e7e]/40 text-[#4d7a52] hover:bg-[#4d7a52] hover:text-white hover:border-[#4d7a52] px-5 py-2.5 rounded-full text-sm font-semibold transition-all shadow-sm hover:shadow-md active:scale-95"
-                      >
-                        {opt.text || opt}
-                      </button>
+                {msg.text && (
+                  <div className={`max-w-[88%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm
+                    ${msg.sender === 'user'
+                      ? 'bg-[#4a7c59] text-white rounded-tr-sm'
+                      : 'bg-white text-[#2c3028] rounded-tl-sm border border-[#d8d0c4]/60'}`}>
+                    {msg.text.split('\n').map((line: string, i: number) => (
+                      <React.Fragment key={i}>{formatText(line)}{i < msg.text.split('\n').length - 1 && <br />}</React.Fragment>
                     ))}
-                  </motion.div>
+                  </div>
+                )}
+
+                {/* Render widgets only if not done */}
+                {!msg.widgetDone && (
+                  <>
+                    {msg.widget === 'moodwheel'   && <MoodWheel onSelect={handleMood} disabled={isLoading} />}
+                    {msg.widget === 'thoughtbubble' && <ThoughtBubble onSelect={handleThoughts} disabled={isLoading} />}
+                    {msg.widget === 'energyslider' && <EnergySlider onSelect={handleEnergy} disabled={isLoading} />}
+                    {msg.widget === 'scale'        && <ScaleQuestion onSelect={handleScale} disabled={isLoading} />}
+                    {msg.widget === 'breathing'    && <MiniBreathing onDone={handleBreathingDone} disabled={isLoading} />}
+                    {msg.widget === 'sleep'        && <SleepCheck onSelect={handleSleep} disabled={isLoading} />}
+                  </>
                 )}
               </motion.div>
             ))}
           </AnimatePresence>
 
           {isTyping && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-2xl rounded-tl-sm px-5 py-4 w-20 shadow-sm border border-[#d8d0c4]/40 flex gap-1.5 justify-center items-center"
-            >
-              <div className="w-2 h-2 bg-[#7a9e7e] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-[#7a9e7e] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-2 h-2 bg-[#7a9e7e] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start gap-1">
+              <Bot size={10} className="text-[#4a7c59] mt-2" />
+              <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-2.5 flex gap-1 shadow-sm border border-[#d8d0c4]/60">
+                {[0, 140, 280].map(d => (
+                  <div key={d} className="w-1.5 h-1.5 bg-[#4a7c59] rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                ))}
+              </div>
             </motion.div>
           )}
-          <div ref={messagesEndRef} className="h-4" />
+          <div ref={messagesEndRef} className="h-1" />
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 bg-white border-t border-[#d8d0c4]/50">
-          <div className="relative flex items-center gap-2">
-            <input
-              type="text"
-              value={freeText}
-              onChange={e => setFreeText(e.target.value)}
+        {/* Input */}
+        <div className="px-3 py-2.5 bg-white border-t border-[#d8d0c4]/50 shrink-0">
+          <div className="flex gap-2 items-center">
+            <input value={freeText} onChange={e => setFreeText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleFreeText()}
-              placeholder={step === 'intro' ? "Or type how you're feeling…" : "Type a message or select an option above…"}
-              disabled={isAiLoading}
-              className="flex-1 bg-[#f5f0e8]/50 border border-[#d8d0c4] rounded-full py-3.5 pl-5 pr-12 text-sm text-[#2c3028] placeholder-[#6b7265] focus:outline-none focus:border-[#7a9e7e] focus:ring-2 focus:ring-[#7a9e7e]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <button
-              onClick={handleFreeText}
-              disabled={!freeText.trim() || isAiLoading}
-              className="w-10 h-10 bg-[#4a7c59] disabled:bg-[#d8d0c4] text-white rounded-full flex items-center justify-center transition-all hover:bg-[#4d7a52] disabled:cursor-not-allowed shrink-0"
-            >
-              <Send size={16} className="ml-0.5" />
-            </button>
+              placeholder="Or type something..."
+              disabled={isLoading || isTyping}
+              className="flex-1 bg-[#f7f3ed] border border-[#d8d0c4] rounded-full py-2 px-4 text-sm focus:outline-none focus:border-[#4a7c59] disabled:opacity-40 transition-all" />
+            <motion.button whileTap={{ scale: 0.88 }} onClick={handleFreeText}
+              disabled={!freeText.trim() || isLoading || isTyping}
+              className="w-8 h-8 bg-[#4a7c59] disabled:bg-[#d8d0c4] text-white rounded-full flex items-center justify-center transition-all shrink-0">
+              <Send size={13} className="ml-0.5" />
+            </motion.button>
           </div>
         </div>
       </div>
@@ -400,191 +666,275 @@ export default function Screening({ setTab }: { setTab?: (tab: string) => void }
   );
 }
 
-// ─────────────────────────────────────────────
-// ─────────────────────────────────────────────
-// Results — all 5 agents: Risk + CareNavigator + Therapy + FollowUp
-// ─────────────────────────────────────────────
-function Results({ scores, userContext, onRestart, setTab }: { scores: any; userContext: string; onRestart: () => void; setTab?: (tab: string) => void }) {
-  const [analysis, setAnalysis]       = useState<RiskAnalysis | null>(null);
-  const [steps, setSteps]             = useState<string[]>([]);
-  const [therapy, setTherapy]         = useState<TherapyIntervention | null>(null);
-  const [followUpQ, setFollowUpQ]     = useState('');
-  const [loading, setLoading]         = useState(true);
-  const [done, setDone]               = useState({ risk: false, nav: false, therapy: false, followup: false });
+// ─────────────────────────────────────────────────────────────────
+// RESULTS - all 4 agents running in sequence
+// ─────────────────────────────────────────────────────────────────
+function Results({ scores, conversationLog, userContext, chatGptContext, onRestart, setTab, currentUser }: {
+  scores: { phq: number; gad: number };
+  conversationLog: string; userContext: string; chatGptContext: string;
+  onRestart: () => void; setTab?: (tab: string) => void; currentUser?: any;
+}) {
+  const [analysis, setAnalysis]     = useState<RiskAnalysis | null>(null);
+  const [steps, setSteps]           = useState<string[]>([]);
+  const [therapy, setTherapy]       = useState<TherapyIntervention | null>(null);
+  const [followUpQ, setFollowUpQ]   = useState('');
+  const [loading, setLoading]       = useState(true);
+  const [done, setDone]             = useState({ risk: false, nav: false, therapy: false, followup: false });
+  const [showBooking, setShowBooking] = useState(false);
+  const [appointment, setAppointment] = useState<any>(null);
+  const [savedToDb, setSavedToDb]   = useState(false);
+
+  const fullContext = [userContext, conversationLog, chatGptContext ? `Prior context: ${chatGptContext}` : ''].filter(Boolean).join('\n');
 
   useEffect(() => {
     const total = scores.phq + scores.gad;
     const rl: 'low' | 'moderate' | 'high' = total <= 2 ? 'low' : total <= 5 ? 'moderate' : 'high';
 
     const run = async () => {
-      // Step 1: RiskAgent
-      const riskResult = await RiskAgent(scores.phq, scores.gad, userContext);
-      setAnalysis(riskResult);
-      setDone(d => ({ ...d, risk: true }));
+      try {
+        // Step 1: RiskAgent
+        const risk = await RiskAgent(scores.phq, scores.gad, fullContext, chatGptContext);
+        setAnalysis(risk);
+        setDone(d => ({ ...d, risk: true }));
 
-      // Step 2: CareNavigator + Therapy + FollowUp in parallel
-      const [stepsResult, therapyResult, followUpResult] = await Promise.all([
-        CareNavigatorAgent(rl, scores.phq, scores.gad, userContext),
-        rl !== 'high' ? TherapyAgent(rl as 'low' | 'moderate', scores.phq, scores.gad, userContext) : Promise.resolve(null),
-        FollowUpAgent(7, rl, userContext),
-      ]);
+        // Step 2: All others in parallel
+        const [stepsR, therapyR, followR] = await Promise.all([
+          CareNavigatorAgent(rl, scores.phq, scores.gad, fullContext),
+          rl !== 'high' ? TherapyAgent(rl as 'low' | 'moderate', scores.phq, scores.gad, fullContext) : Promise.resolve(null),
+          FollowUpAgent(7, rl, fullContext),
+        ]);
 
-      setSteps(stepsResult);
-      setDone(d => ({ ...d, nav: true }));
+        setSteps(stepsR);
+        setDone(d => ({ ...d, nav: true }));
+        if (therapyR) { setTherapy(therapyR); }
+        setDone(d => ({ ...d, therapy: true }));
+        setFollowUpQ(followR.checkInQuestion);
+        setDone(d => ({ ...d, followup: true }));
 
-      if (therapyResult) { setTherapy(therapyResult); setDone(d => ({ ...d, therapy: true })); }
-      setFollowUpQ(followUpResult.checkInQuestion);
-      setDone(d => ({ ...d, followup: true }));
-      setLoading(false);
+        // Save to DB
+        if (currentUser) {
+          try {
+            const { api: a } = await import('../api');
+            await a.screenings.save({ phqScore: scores.phq, gadScore: scores.gad, riskLevel: rl, riskScore: risk.riskScore, userContext: fullContext.slice(0, 300), channel: 'web', isCrisis: rl === 'high' && total >= 10 });
+            setSavedToDb(true);
+          } catch { /* silently fail if offline */ }
+        }
+      } catch (e) {
+        // Agents failed completely - show fallback results anyway
+        console.warn('Agent pipeline error:', e);
+        setDone({ risk: true, nav: true, therapy: true, followup: true });
+      } finally {
+        setLoading(false);
+      }
     };
     run();
   }, []);
 
-  const risk = analysis?.riskLevel || (scores.phq + scores.gad <= 2 ? 'low' : scores.phq + scores.gad <= 5 ? 'moderate' : 'high');
+  const risk = analysis?.riskLevel ?? (scores.phq + scores.gad <= 2 ? 'low' : scores.phq + scores.gad <= 5 ? 'moderate' : 'high');
   const S = {
-    low:      { bg: 'from-[#e8f5e9] to-[#c8e6c9] border-[#a5d6a7]', color: 'text-[#2e7d32]', dot: 'bg-[#5a8c5e]' },
-    moderate: { bg: 'from-[#fff8e1] to-[#ffecb3] border-[#ffe082]', color: 'text-[#f57f17]', dot: 'bg-[#c4a040]' },
-    high:     { bg: 'from-[#fce4ec] to-[#f8bbd0] border-[#f48fb1]', color: 'text-[#c62828]', dot: 'bg-[#c4605a]' },
+    low:      { grad: 'from-[#e8f5e9] to-[#c8e6c9]', border: 'border-[#a5d6a7]', color: 'text-[#2e7d32]', dot: 'bg-[#4a7c59]' },
+    moderate: { grad: 'from-[#fff8e1] to-[#ffecb3]', border: 'border-[#ffe082]', color: 'text-[#f57f17]', dot: 'bg-[#c4a040]' },
+    high:     { grad: 'from-[#fce4ec] to-[#f8bbd0]', border: 'border-[#f48fb1]', color: 'text-[#c62828]', dot: 'bg-[#c4605a]' },
   };
-  const style = S[risk];
+  const st = S[risk];
 
   const AGENTS = [
-    { name: 'RiskAgent',      sub: 'Scoring & Safety',       done: done.risk },
-    { name: 'CareNavigator',  sub: 'Logistics & Routing',    done: done.nav },
-    { name: 'TherapyAgent',   sub: 'Micro-Interventions',    done: done.therapy },
-    { name: 'FollowUpAgent',  sub: 'Retention',              done: done.followup },
+    { name: 'RiskAgent',      sub: 'Scoring + NLP sentiment', done: done.risk },
+    { name: 'CareNavigator',  sub: 'Personalised next steps', done: done.nav },
+    { name: 'TherapyAgent',   sub: 'CBT intervention',        done: done.therapy },
+    { name: 'FollowUpAgent',  sub: '7-day check-in',          done: done.followup },
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }} className="max-w-3xl mx-auto px-4 py-8">
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl mx-auto px-4 py-5">
       <Disclaimer />
 
       {loading ? (
-        <div className="bg-white rounded-[2rem] p-10 text-center shadow-sm border border-[#d8d0c4]">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#e8f5e9] mb-5">
-            <Sparkles size={28} className="text-[#4a7c59] animate-pulse" />
+        <div className="bg-white rounded-[2rem] p-8 text-center shadow-sm border border-[#d8d0c4]">
+          <div className="w-12 h-12 bg-[#e8f5e9] rounded-full flex items-center justify-center mx-auto mb-3">
+            <Sparkles size={22} className="text-[#4a7c59] animate-pulse" />
           </div>
-          <h3 className="font-serif text-2xl text-[#2c3028] mb-2">Analysing your responses…</h3>
-          <p className="text-[#6b7265] text-sm mb-8">Our specialist agents are personalising your results</p>
-          <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
+          <h3 className="font-serif text-lg text-[#2c3028] mb-1">Analysing everything you shared...</h3>
+          <p className="text-[#6b7265] text-xs mb-5">4 specialist agents are personalising your results</p>
+          <div className="grid grid-cols-2 gap-2 max-w-xs mx-auto">
             {AGENTS.map(a => (
-              <div key={a.name} className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium border transition-all duration-700 ${
-                a.done ? 'bg-[#e8f5e9] border-[#a5d6a7] text-[#2e7d32]' : 'bg-[#f0ece5] border-[#d8d0c4] text-[#6b7265] animate-pulse'
-              }`}>
-                <span className={`w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold ${a.done ? 'bg-[#4a7c59] text-white' : 'bg-[#d8d0c4] text-white'}`}>
-                  {a.done ? '✓' : '…'}
+              <motion.div key={a.name}
+                animate={a.done ? { scale: [1, 1.03, 1] } : {}}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border-2 transition-all duration-700
+                  ${a.done ? 'bg-[#e8f5e9] border-[#a5d6a7] text-[#2e7d32]' : 'bg-[#f0ece5] border-[#d8d0c4] text-[#6b7265] animate-pulse'}`}>
+                <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${a.done ? 'bg-[#4a7c59] text-white' : 'bg-[#d8d0c4] text-white'}`}>
+                  {a.done ? '✓' : '·'}
                 </span>
-                <div className="text-left">
+                <div>
                   <div className="font-bold leading-tight">{a.name}</div>
                   <div className="opacity-60 text-[9px]">{a.sub}</div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       ) : (
-        <>
+        <div className="space-y-4">
           {/* Risk Banner */}
-          <div className={`p-7 rounded-[2rem] border-2 shadow-lg text-center mb-5 relative overflow-hidden bg-gradient-to-br ${style.bg}`}>
-            <div className="absolute -right-8 -top-8 text-8xl opacity-10">{analysis?.riskIcon}</div>
+          <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+            className={`bg-gradient-to-br ${st.grad} border-2 ${st.border} rounded-[2rem] p-6 text-center relative overflow-hidden shadow-lg`}>
+            <div className="absolute -right-4 -top-4 text-7xl opacity-10">{analysis?.riskIcon}</div>
             <div className="relative z-10">
-              <div className="text-5xl mb-3">{analysis?.riskIcon}</div>
-              <div className="flex items-center justify-center gap-3 mb-3 flex-wrap">
-                <h2 className={`font-serif text-3xl font-bold ${style.color}`}>{analysis?.riskTitle}</h2>
-                {analysis?.riskScore !== undefined && (
-                  <span className={`text-sm font-bold px-3 py-1 rounded-full bg-white/60 ${style.color}`}>Score: {analysis.riskScore}/100</span>
-                )}
+              <div className="text-4xl mb-2">{analysis?.riskIcon}</div>
+              <div className="flex items-center justify-center gap-2 flex-wrap mb-2">
+                <h2 className={`font-serif text-2xl font-bold ${st.color}`}>{analysis?.riskTitle}</h2>
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-full bg-white/60 backdrop-blur-sm ${st.color}`}>
+                  Score: {analysis?.riskScore}/100
+                </span>
               </div>
-              <p className="text-[#2c3028] text-base max-w-xl mx-auto leading-relaxed">{analysis?.personalMessage}</p>
+              <p className="text-[#2c3028] text-sm leading-relaxed max-w-md mx-auto">{analysis?.personalMessage}</p>
               {analysis?.keyInsight && (
-                <div className="mt-3 inline-flex items-center gap-2 bg-white/60 px-4 py-1.5 rounded-full text-sm text-[#2c3028] font-medium">
-                  <Sparkles size={13} className="text-[#d4843a]" /> {analysis.keyInsight}
+                <div className="mt-2.5 inline-flex items-center gap-1.5 bg-white/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-[#2c3028] font-medium">
+                  <Sparkles size={11} className="text-[#d4843a]" />{analysis.keyInsight}
                 </div>
               )}
-              {analysis?.sentimentFlag && (
-                <div className="mt-1.5 text-xs text-[#6b7265] italic">{analysis.sentimentFlag}</div>
-              )}
+              {analysis?.sentimentFlag && <p className="mt-1.5 text-xs text-[#6b7265] italic">{analysis.sentimentFlag}</p>}
             </div>
-          </div>
+          </motion.div>
 
-          {/* PHQ-2 + GAD-2 Scores */}
-          <div className="grid grid-cols-2 gap-4 mb-5">
+          {/* Score Cards */}
+          <div className="grid grid-cols-2 gap-3">
             {[
-              { label: 'PHQ-2 — Depression', score: scores.phq, max: 6, hi: scores.phq >= 2 },
-              { label: 'GAD-2 — Anxiety',   score: scores.gad, max: 6, hi: scores.gad >= 2 },
+              { label: 'PHQ-2', sub: 'Depression', score: scores.phq, hi: scores.phq >= 2 },
+              { label: 'GAD-2', sub: 'Anxiety',    score: scores.gad, hi: scores.gad >= 2 },
             ].map(s => (
-              <div key={s.label} className="bg-white border border-[#d8d0c4] rounded-2xl p-5 text-center shadow-sm">
-                <div className={`font-serif text-5xl font-bold mb-1 ${s.hi ? 'text-[#c4605a]' : 'text-[#4a7c59]'}`}>{s.score}/{s.max}</div>
-                <div className="text-xs text-[#6b7265] uppercase tracking-wider font-bold">{s.label}</div>
-              </div>
+              <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-white border border-[#d8d0c4] rounded-2xl p-4 text-center shadow-sm">
+                <div className={`font-serif text-4xl font-bold mb-0.5 ${s.hi ? 'text-[#c4605a]' : 'text-[#4a7c59]'}`}>
+                  {s.score}<span className="text-lg">/6</span>
+                </div>
+                <div className="text-xs font-bold text-[#2c3028]">{s.label}</div>
+                <div className="text-[10px] text-[#6b7265]">{s.sub}</div>
+                <div className="text-[10px] text-[#6b7265] mt-0.5">
+                  {s.score === 0 ? 'Minimal' : s.score === 1 ? 'Mild' : s.score <= 3 ? 'Moderate' : 'Significant'}
+                </div>
+              </motion.div>
             ))}
           </div>
 
-          {/* TherapyAgent — personalised CBT exercise (low/moderate only) */}
+          {/* TherapyAgent output */}
           {therapy && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="bg-gradient-to-br from-[#e8f5e9] to-[#f0fdf4] border border-[#a5d6a7] rounded-2xl p-5 mb-5">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="bg-[#4a7c59] text-white p-2 rounded-xl shrink-0"><Bot size={16} /></div>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+              className="bg-gradient-to-br from-[#e8f5e9] to-[#f0fdf4] border border-[#a5d6a7] rounded-2xl p-4">
+              <div className="flex items-start gap-2 mb-3">
+                <div className="bg-[#4a7c59] text-white p-1.5 rounded-lg shrink-0"><Bot size={13} /></div>
                 <div>
-                  <div className="text-[10px] text-[#4a7c59] font-bold uppercase tracking-wider">TherapyAgent · {therapy.duration}</div>
-                  <div className="font-bold text-[#2c3028]">{therapy.title}</div>
+                  <div className="text-[10px] text-[#4a7c59] font-bold uppercase tracking-wider">TherapyAgent - {therapy.duration}</div>
+                  <div className="font-bold text-sm text-[#2c3028]">{therapy.title}</div>
                   <div className="text-xs text-[#6b7265] italic mt-0.5">{therapy.rationale}</div>
                 </div>
               </div>
-              <ol className="space-y-1.5 pl-1">
-                {therapy.instruction.split('\n').filter(Boolean).map((step, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-[#2c3028]">
-                    <span className="w-5 h-5 rounded-full bg-[#4a7c59] text-white text-[10px] flex items-center justify-center shrink-0 mt-0.5 font-bold">{i + 1}</span>
-                    {step.replace(/^\d+\.\s*/, '')}
-                  </li>
+              <ol className="space-y-1.5">
+                {therapy.steps.map((step, i) => (
+                  <motion.li key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.07 }}
+                    className="flex gap-2 text-xs text-[#2c3028]">
+                    <span className="w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] flex items-center justify-center shrink-0 mt-0.5 font-bold">{i + 1}</span>
+                    {String(step).replace(/^\d+\.\s*/, '')}
+                  </motion.li>
                 ))}
               </ol>
-              <button onClick={() => setTab && setTab('resources')} className="mt-3 text-xs text-[#4a7c59] font-bold hover:underline">
-                → More exercises in Resources
+              <button onClick={() => setTab?.('resources')} className="mt-2.5 text-xs text-[#4a7c59] font-bold hover:underline">
+                More techniques in Resources
               </button>
             </motion.div>
           )}
 
-          {/* CareNavigatorAgent — next steps */}
-          <div className="bg-white border border-[#d8d0c4] rounded-2xl p-6 mb-5 shadow-sm">
-            <h3 className="font-bold text-base mb-4 flex items-center gap-2 text-[#2c3028]">
-              <span className="bg-[#f0ece5] p-1.5 rounded-lg"><Sparkles size={16} className="text-[#d4843a]" /></span>
-              CareNavigator — your personalised next steps
+          {/* CareNavigatorAgent steps */}
+          <div className="bg-white border border-[#d8d0c4] rounded-2xl p-4 shadow-sm">
+            <h3 className="font-bold text-sm mb-3 flex items-center gap-2 text-[#2c3028]">
+              <Sparkles size={13} className="text-[#d4843a]" /> CareNavigator - your personalised next steps
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2.5">
               {steps.map((step, i) => (
-                <motion.li key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
-                  className="flex gap-3 text-sm text-[#2c3028]">
-                  <div className={`w-2.5 h-2.5 mt-1.5 rounded-full ${style.dot} shrink-0`} />{step}
+                <motion.li key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
+                  className="flex gap-2.5 text-xs text-[#2c3028] leading-relaxed">
+                  <div className={`w-2 h-2 mt-1 rounded-full shrink-0 ${st.dot}`} />
+                  {step}
                 </motion.li>
               ))}
             </ul>
           </div>
 
-          {/* FollowUpAgent — scheduled check-in */}
+          {/* FollowUpAgent */}
           {followUpQ && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
-              className="bg-[#fff8e1] border border-[#ffe082] rounded-2xl p-4 mb-5">
-              <div className="text-[10px] text-[#f57f17] font-bold uppercase tracking-wider mb-1">FollowUpAgent · 7-day check-in scheduled</div>
-              <p className="text-sm text-[#2c3028]">We'll check in with you in 7 days and ask: <strong>"{followUpQ}"</strong></p>
+            <div className="bg-[#fff8e1] border border-[#ffe082] rounded-xl p-3 text-xs text-[#2c3028]">
+              <div className="font-bold text-[#f57f17] text-[10px] uppercase tracking-wider mb-1">FollowUpAgent - 7-day check-in scheduled</div>
+              In 7 days we will ask: <strong>"{followUpQ}"</strong>
+            </div>
+          )}
+
+          {savedToDb && (
+            <div className="flex items-center gap-2 text-xs text-[#2e7d32] font-medium bg-[#e8f5e9] border border-[#a5d6a7] rounded-xl p-2.5">
+              <Check size={12} /> Saved to your health record
+            </div>
+          )}
+
+          {/* Crisis appointment */}
+          {risk === 'high' && !appointment && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="bg-gradient-to-r from-[#fce4ec] to-[#f8bbd0] border-2 border-[#f48fb1] rounded-2xl p-4">
+              <div className="font-bold text-[#c62828] text-sm mb-1">Crisis level detected - connect to a doctor now</div>
+              <p className="text-xs text-[#2c3028] mb-3">A secure video call with a mental health professional can be set up immediately.</p>
+              <div className="flex gap-2 flex-wrap">
+                <button onClick={() => setShowBooking(true)} className="flex items-center gap-1.5 bg-[#c62828] text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-[#b71c1c] transition-all">
+                  <Calendar size={12} /> Connect to Doctor
+                </button>
+                <button onClick={() => setTab?.('directory')} className="flex items-center gap-1.5 bg-white border border-[#f48fb1] text-[#c62828] px-4 py-2 rounded-full text-xs font-bold hover:bg-[#fce4ec] transition-all">
+                  <Phone size={12} /> Crisis Helplines
+                </button>
+              </div>
             </motion.div>
           )}
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <button onClick={onRestart} className="flex items-center justify-center gap-2 border-2 border-[#4a7c59] text-[#4a7c59] hover:bg-[#4a7c59] hover:text-white px-8 py-3.5 rounded-full font-semibold transition-all">
-              <RefreshCw size={17} /> Retake Screening
-            </button>
-            {risk !== 'low' && (
-              <button onClick={() => setTab && setTab('directory')}
-                className="flex items-center justify-center gap-2 bg-[#d4843a] text-white px-8 py-3.5 rounded-full font-semibold hover:bg-[#c07030] transition-all shadow-lg">
-                🌍 Find a Helpline <ArrowRight size={17} />
+          {risk === 'moderate' && !appointment && (
+            <div className="bg-[#fff8e1] border border-[#ffe082] rounded-2xl p-4 flex items-center justify-between gap-3">
+              <div>
+                <div className="font-bold text-[#f57f17] text-xs mb-0.5">Book with a mental health professional</div>
+                <p className="text-xs text-[#2c3028]">Speaking with a doctor this week is recommended based on your results.</p>
+              </div>
+              <button onClick={() => setShowBooking(true)} className="flex items-center gap-1 bg-[#f57f17] text-white px-3 py-2 rounded-full text-xs font-bold hover:bg-[#e65100] transition-all shrink-0">
+                <Calendar size={11} /> Book
               </button>
-            )}
+            </div>
+          )}
+
+          {appointment && (
+            <div className="bg-[#e8f5e9] border-2 border-[#a5d6a7] rounded-2xl p-4">
+              <div className="flex items-center gap-2 font-bold text-[#2e7d32] text-sm mb-1"><Check size={14} /> Appointment confirmed</div>
+              <div className="text-xs text-[#2c3028]">{appointment.doctorName} - {new Date(appointment.dateTime).toLocaleString()}</div>
+              {appointment.meetingLink && (
+                <a href={appointment.meetingLink} target="_blank" rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-1.5 bg-[#4a7c59] text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#3a6b3e] transition-all">
+                  Join Video Call
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button onClick={onRestart} className="flex-1 flex items-center justify-center gap-1.5 border-2 border-[#4a7c59] text-[#4a7c59] hover:bg-[#4a7c59] hover:text-white py-3 rounded-full text-sm font-semibold transition-all">
+              <RefreshCw size={14} /> Retake
+            </button>
+            <button onClick={() => setTab?.('resources')} className="flex-1 flex items-center justify-center gap-1.5 bg-[#4a7c59] text-white py-3 rounded-full text-sm font-semibold hover:bg-[#3a6b3e] transition-all">
+              <BookOpen size={14} /> Resources
+            </button>
           </div>
-        </>
+        </div>
       )}
+
+      <AnimatePresence>
+        {showBooking && (
+          <AppointmentBooking riskLevel={risk === 'high' ? 'high' : 'moderate'} isCritical={risk === 'high'}
+            onClose={() => setShowBooking(false)}
+            onBooked={apt => { setAppointment(apt); setShowBooking(false); }} />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

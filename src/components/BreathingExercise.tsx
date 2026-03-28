@@ -59,7 +59,7 @@ export default function BreathingExercise({ onClose }: { onClose: () => void }) 
         className="bg-[#fdfaf4] rounded-[2rem] p-10 max-w-md w-full text-center shadow-2xl border border-[#d8d0c4]"
       >
         <h3 className="font-serif text-2xl text-[#2c3028] mb-2">Box Breathing</h3>
-        <p className="text-[#6b7265] text-sm mb-8">4-4-4-4 technique — used by athletes and medical professionals to reduce anxiety instantly</p>
+        <p className="text-[#6b7265] text-sm mb-8">4-4-4-4 technique - used by athletes and medical professionals to reduce anxiety instantly</p>
 
         {/* Breathing circle */}
         <div className="flex items-center justify-center mb-8">

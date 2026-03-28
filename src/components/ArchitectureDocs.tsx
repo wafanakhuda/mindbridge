@@ -6,48 +6,43 @@ export default function ArchitectureDocs({ onBack }: { onBack?: () => void }) {
   const [activeTab, setActiveTab] = useState('architecture');
 
   const tabs = [
-    { id: 'architecture', label: 'System Architecture', icon: <LayoutTemplate size={18} /> },
-    { id: 'schema', label: 'Database Schema', icon: <Database size={18} /> },
-    { id: 'api', label: 'API Endpoints', icon: <Server size={18} /> },
-    { id: 'agents', label: 'Agent Workflows', icon: <Bot size={18} /> },
-    { id: 'conversations', label: 'Sample Conversations', icon: <MessageSquare size={18} /> },
+    { id: 'architecture', label: 'System Architecture', icon: <LayoutTemplate size={16} /> },
+    { id: 'schema',       label: 'Database Schema',     icon: <Database size={16} /> },
+    { id: 'api',          label: 'API Endpoints',        icon: <Server size={16} /> },
+    { id: 'agents',       label: 'Agent Workflows',      icon: <Bot size={16} /> },
+    { id: 'conversations', label: 'Sample Flow',         icon: <MessageSquare size={16} /> },
   ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-6 py-12">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-6 py-10">
       <div className="flex items-center gap-4 mb-8">
         {onBack && (
-          <button onClick={onBack} className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors">
-            <ArrowLeft size={20} className="text-[#2c3028]" />
+          <button onClick={onBack} className="p-2 bg-white rounded-full shadow-sm hover:bg-[#f0ece5] transition-colors border border-[#d8d0c4]">
+            <ArrowLeft size={18} className="text-[#2c3028]" />
           </button>
         )}
         <div>
-          <h2 className="font-serif text-4xl text-[#2c3028] font-bold">MindBridge System Specs</h2>
-          <p className="text-[#6b7265] mt-2">Technical documentation, architecture, and AI workflows.</p>
+          <h2 className="font-serif text-3xl text-[#2c3028] font-bold">MindBridge System Specs</h2>
+          <p className="text-[#6b7265] text-sm mt-0.5">Technical documentation - Hack for Health Equity 2026</p>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-8">
+      <div className="flex flex-wrap gap-2 mb-6">
         {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors ${
-              activeTab === tab.id 
-                ? 'bg-[#4a7c59] text-white shadow-md' 
-                : 'bg-white text-[#6b7265] hover:bg-[#e8f5e9] hover:text-[#4a7c59] border border-[#d8d0c4]'
-            }`}
-          >
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+              activeTab === tab.id ? 'bg-[#4a7c59] text-white shadow-md' : 'bg-white text-[#6b7265] hover:bg-[#e8f5e9] hover:text-[#4a7c59] border border-[#d8d0c4]'
+            }`}>
             {tab.icon} {tab.label}
           </button>
         ))}
       </div>
 
       <div className="bg-white border border-[#d8d0c4] rounded-[2rem] p-8 shadow-sm">
-        {activeTab === 'architecture' && <ArchitectureTab />}
-        {activeTab === 'schema' && <SchemaTab />}
-        {activeTab === 'api' && <ApiTab />}
-        {activeTab === 'agents' && <AgentsTab />}
+        {activeTab === 'architecture'  && <ArchitectureTab />}
+        {activeTab === 'schema'        && <SchemaTab />}
+        {activeTab === 'api'           && <ApiTab />}
+        {activeTab === 'agents'        && <AgentsTab />}
         {activeTab === 'conversations' && <ConversationsTab />}
       </div>
     </motion.div>
@@ -56,113 +51,207 @@ export default function ArchitectureDocs({ onBack }: { onBack?: () => void }) {
 
 const ArchitectureTab = () => (
   <div className="space-y-6 text-[#2c3028]">
-    <h3 className="text-2xl font-serif font-bold border-b pb-2">System Architecture</h3>
-    <p>MindBridge is a two-layer mental health access system connecting community digital screening with primary healthcare.</p>
-    
-    <div className="grid md:grid-cols-2 gap-6 mt-6">
-      <div className="bg-[#f5f0e8] p-6 rounded-2xl">
-        <h4 className="font-bold text-lg mb-4 text-[#4a7c59]">1. Community Digital Entry (Layer 1)</h4>
-        <ul className="list-disc pl-5 space-y-2 text-sm">
-          <li><strong>WhatsApp Business API:</strong> Primary interface for low-bandwidth, accessible entry.</li>
-          <li><strong>Multi-Agent AI System:</strong> Handles triage, risk scoring, and micro-interventions.</li>
-          <li><strong>Multilingual NLP:</strong> Processes English, Hindi, Kannada via Gemini/OpenAI.</li>
-        </ul>
-      </div>
-      <div className="bg-[#e3f2fd] p-6 rounded-2xl">
-        <h4 className="font-bold text-lg mb-4 text-[#1565c0]">2. Primary Care Integration (Layer 2)</h4>
-        <ul className="list-disc pl-5 space-y-2 text-sm">
-          <li><strong>Clinic Dashboard:</strong> React/Next.js frontend for healthcare workers.</li>
-          <li><strong>Clinical Tools:</strong> PHQ-9 / GAD-7 digital forms and decision-tree protocols.</li>
-          <li><strong>Follow-up Engine:</strong> Automated SMS/WhatsApp check-ins and adherence nudges.</li>
-        </ul>
-      </div>
+    <h3 className="text-2xl font-serif font-bold border-b border-[#f0ece5] pb-3">System Architecture</h3>
+    <p className="text-[#6b7265]">MindBridge is a hybrid community-primary care mental health system. It connects AI-powered conversational screening with real clinic referrals, structured follow-up, and a 195-country crisis directory - all in one platform.</p>
+
+    <div className="grid md:grid-cols-3 gap-4 mt-4">
+      {[
+        { title: 'Layer 1 - Community Screening', color: 'bg-[#e8f5e9] border-[#c8e6c9]', accent: 'text-[#2e7d32]', items: ['Conversational PHQ-2 + GAD-2 check-in', '6 interactive widgets (MoodWheel, EnergySlider, MiniBreathing, SleepCheck, ThoughtBubble, ScaleQuestion)', 'ChatGPT history extraction for richer context', '8 Gemini 2.0 Flash AI agents running in sequence'] },
+        { title: 'Layer 2 - Primary Care Link', color: 'bg-[#e3f2fd] border-[#bbdefb]', accent: 'text-[#1565c0]', items: ['Risk-based referral to 10 real doctors across 10 countries', 'Crisis cases: auto-confirmed appointment + Jit.si video link generated', 'Clinic portal: live MongoDB dashboard with real aggregations', 'PHQ-9, GAD-7, MDI, PCL-5, DSM-5 clinical tools for practitioners'] },
+        { title: 'Layer 3 - Follow-Up Engine', color: 'bg-[#fff8e1] border-[#ffe082]', accent: 'text-[#f57f17]', items: ['FollowUpAgent generates personalised 7-day check-in question', 'Appointments tracked with status (pending / confirmed / completed)', 'Patient health record: screening history + appointment history', 'Overdue follow-up alerts on clinic dashboard'] },
+      ].map(s => (
+        <div key={s.title} className={`border-2 ${s.color} rounded-2xl p-5`}>
+          <h4 className={`font-bold text-sm mb-3 ${s.accent}`}>{s.title}</h4>
+          <ul className="space-y-1.5">
+            {s.items.map((item, i) => (
+              <li key={i} className="flex gap-2 text-xs text-[#2c3028]">
+                <span className={`${s.accent} shrink-0 mt-0.5`}>-</span>{item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
 
-    <h4 className="font-bold text-lg mt-8">Tech Stack</h4>
+    <h4 className="font-bold text-base mt-6">Tech Stack</h4>
     <div className="flex flex-wrap gap-2">
-      {['Frontend: React / Next.js', 'Backend: Node.js / Python', 'Database: Firebase / Supabase', 'AI: Gemini API', 'Messaging: WhatsApp Business API', 'Maps: Google Maps API'].map(tech => (
-        <span key={tech} className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium">{tech}</span>
+      {['Frontend: React + Vite + Tailwind v3', 'Backend: Node.js + Express', 'Database: MongoDB Atlas', 'AI: Gemini 2.0 Flash (8 agents)', 'Auth: JWT + bcrypt (12 rounds)', 'Deploy: Railway + GitHub', 'Screening: PHQ-2 / GAD-2 validated', 'Directory: 195 countries', 'Video: Jit.si (crisis appointments)', 'Animations: Framer Motion'].map(tech => (
+        <span key={tech} className="bg-[#f0ece5] text-[#2c3028] px-3 py-1 rounded-full text-xs font-medium border border-[#d8d0c4]">{tech}</span>
+      ))}
+    </div>
+
+    <h4 className="font-bold text-base mt-4">Privacy & Security</h4>
+    <div className="grid md:grid-cols-2 gap-3">
+      {[
+        'No PII stored in screenings - anonymous IDs only',
+        'Passwords hashed with bcrypt (12 salt rounds)',
+        'JWT tokens expire after 7 days',
+        'ChatGPT context truncated to 300 chars before storage',
+        'Peer community posts are anonymous - no user IDs linked',
+        'Crisis appointments generate unique Jit.si room IDs',
+      ].map(p => (
+        <div key={p} className="flex gap-2 text-xs text-[#2c3028] bg-[#f0fdf4] border border-[#c8e6c9] rounded-xl px-3 py-2">
+          <span className="text-[#4a7c59] font-bold shrink-0">OK</span>{p}
+        </div>
       ))}
     </div>
   </div>
 );
 
 const SchemaTab = () => (
-  <div className="space-y-6 text-[#2c3028]">
-    <h3 className="text-2xl font-serif font-bold border-b pb-2">Database Schema (Firebase/Supabase)</h3>
-    <div className="space-y-4">
-      <SchemaBlock title="Users (Patients)" code={`{
-  id: string (UUID),
-  phone_hash: string (Anonymized WhatsApp ID),
-  language_pref: string ('en', 'hi', 'kn'),
-  risk_score: number (0-100),
-  risk_level: enum ('LOW', 'MODERATE', 'HIGH', 'CRISIS'),
-  assigned_clinic_id: string (UUID, nullable),
-  recovery_streak: number,
-  created_at: timestamp
+  <div className="space-y-5 text-[#2c3028]">
+    <h3 className="text-2xl font-serif font-bold border-b border-[#f0ece5] pb-3">Database Schema (MongoDB Atlas)</h3>
+    <SchemaBlock title="users" code={`{
+  _id: ObjectId,
+  email: string (unique, lowercase),
+  passwordHash: string (bcrypt 12 rounds),
+  role: "patient" | "clinic" | "admin",
+  name: string,
+  createdAt: Date
 }`} />
-      <SchemaBlock title="Screenings" code={`{
-  id: string (UUID),
-  user_id: string (UUID),
-  type: enum ('PHQ-2', 'GAD-2', 'PHQ-9', 'GAD-7'),
-  responses: jsonb,
-  calculated_score: number,
-  ai_sentiment_flag: boolean,
-  conducted_by: enum ('BOT', 'CLINICIAN'),
-  timestamp: timestamp
+    <SchemaBlock title="screenings" code={`{
+  _id: ObjectId,
+  anonymousId: string (e.g. "anon-demo-1009"),  // never linked to name
+  userId: string (ObjectId ref, optional),
+  phqScore: number (0-6),
+  gadScore: number (0-6),
+  riskLevel: "low" | "moderate" | "high",
+  riskScore: number (0-100),
+  userContext: string (max 300 chars, no PII),
+  channel: "web" | "whatsapp" | "sms",
+  isCrisis: boolean,
+  followUpDue: Date (default: +7 days),
+  followUpDone: boolean,
+  createdAt: Date
 }`} />
-      <SchemaBlock title="Referrals & Follow-ups" code={`{
-  id: string (UUID),
-  user_id: string (UUID),
-  clinic_id: string (UUID),
-  status: enum ('PENDING', 'VISITED', 'MISSED'),
-  next_checkin_date: timestamp,
-  treatment_plan: text,
-  adherence_score: number (0-100)
+    <SchemaBlock title="appointments" code={`{
+  _id: ObjectId,
+  patientId: string (userId),
+  doctorName: string,
+  doctorEmail: string,
+  doctorSpeciality: string,
+  clinicName: string,
+  clinicLocation: string,
+  dateTime: Date,
+  status: "pending" | "confirmed" | "completed" | "cancelled",
+  riskLevel: "moderate" | "high" | "crisis",
+  isCritical: boolean,
+  notes: string,
+  meetingLink: string (Jit.si URL, crisis only),
+  createdAt: Date
 }`} />
-    </div>
+    <SchemaBlock title="doctors" code={`{
+  _id: ObjectId,
+  name: string,
+  email: string (unique),
+  speciality: string,
+  clinicName: string,
+  clinicLocation: string,
+  availableSlots: Date[],
+  acceptsCritical: boolean,
+  languages: string[],
+  rating: number (1-5),
+  responseTimeMinutes: number
+}`} />
   </div>
 );
 
 const ApiTab = () => (
-  <div className="space-y-6 text-[#2c3028]">
-    <h3 className="text-2xl font-serif font-bold border-b pb-2">Core API Endpoints</h3>
-    <div className="space-y-4">
-      <ApiBlock method="POST" endpoint="/api/webhook/whatsapp" desc="Receives incoming messages from WhatsApp Business API. Routes to Multi-Agent system." />
-      <ApiBlock method="POST" endpoint="/api/ai/triage" desc="Processes user input, runs PHQ-2/GAD-2, returns Risk Score (0-100) and next action." />
-      <ApiBlock method="GET" endpoint="/api/clinics/nearby" desc="Takes lat/lng, returns nearest primary care centers using Google Maps API." />
-      <ApiBlock method="POST" endpoint="/api/patients/:id/referral" desc="Creates a referral record linking a high/moderate risk patient to a clinic." />
-      <ApiBlock method="POST" endpoint="/api/cron/followup" desc="Triggered daily. Sends SMS/WhatsApp check-ins based on 'next_checkin_date'." />
-      <ApiBlock method="GET" endpoint="/api/analytics/heatmaps" desc="Aggregates anonymized risk scores by geographic region for the Community Dashboard." />
+  <div className="space-y-5 text-[#2c3028]">
+    <h3 className="text-2xl font-serif font-bold border-b border-[#f0ece5] pb-3">Core API Endpoints</h3>
+    <div className="space-y-3">
+      <ApiBlock method="POST" endpoint="/api/auth/register" desc="Register new user. Body: {email, password, name, role}. Returns JWT token + user object." />
+      <ApiBlock method="POST" endpoint="/api/auth/login" desc="Login. Body: {email, password}. Returns JWT token (7d expiry) + user object." />
+      <ApiBlock method="GET"  endpoint="/api/auth/me" desc="Get current user from JWT. Returns user object without passwordHash." />
+      <ApiBlock method="POST" endpoint="/api/screenings" desc="Save PHQ-2/GAD-2 result. Requires auth. Body: {phqScore, gadScore, riskLevel, riskScore, userContext, channel, isCrisis}." />
+      <ApiBlock method="GET"  endpoint="/api/screenings/my" desc="Get current patient's last 10 screenings. Requires auth. Never returns userContext." />
+      <ApiBlock method="GET"  endpoint="/api/screenings/stats" desc="Aggregate stats for clinic/admin dashboard. Requires clinic or admin role." />
+      <ApiBlock method="GET"  endpoint="/api/appointments/doctors" desc="List available doctors. Pass ?critical=true to filter to crisis-accepting doctors only." />
+      <ApiBlock method="POST" endpoint="/api/appointments" desc="Book appointment. Body: {doctorEmail, dateTime, riskLevel, notes, isCritical}. Crisis = auto-confirmed + Jit.si link." />
+      <ApiBlock method="GET"  endpoint="/api/appointments/my" desc="Patient's own appointment history sorted by date." />
+      <ApiBlock method="PATCH" endpoint="/api/appointments/:id/status" desc="Clinic updates appointment status. Body: {status}." />
+      <ApiBlock method="GET"  endpoint="/api/dashboard/clinic" desc="Full clinic dashboard data: KPIs, risk breakdown, channel stats, recent screenings, appointments. Requires clinic role." />
+      <ApiBlock method="GET"  endpoint="/api/dashboard/admin" desc="System-wide stats: users, screenings, appointments, crisis events, doctors by count. Requires admin role." />
+      <ApiBlock method="GET"  endpoint="/api/health" desc="Health check. Returns {status: 'ok', db: 'connected' | 'disconnected'}." />
     </div>
   </div>
 );
 
 const AgentsTab = () => (
-  <div className="space-y-6 text-[#2c3028]">
-    <h3 className="text-2xl font-serif font-bold border-b pb-2">Multi-Agent AI Workflows</h3>
-    <div className="grid gap-4">
-      <AgentCard name="TriageAgent" role="Initial Screening" desc="Greets user, establishes rapport, and seamlessly weaves PHQ-2 / GAD-2 questions into natural conversation." color="border-blue-200 bg-blue-50" />
-      <AgentCard name="RiskAgent" role="Scoring & Safety" desc="Analyzes TriageAgent's output + NLP sentiment. Assigns a score (0-100). If crisis keywords detected, immediately overrides flow to trigger emergency protocols." color="border-red-200 bg-red-50" />
-      <AgentCard name="TherapyAgent" role="Micro-Interventions" desc="For Low/Moderate risk. Delivers bite-sized CBT exercises, breathing techniques, and 'Instant Calm Mode' content." color="border-green-200 bg-green-50" />
-      <AgentCard name="CareNavigator" role="Logistics & Routing" desc="For Moderate/High risk. Uses location data to suggest nearby primary care clinics, explains what to expect, and books appointments." color="border-purple-200 bg-purple-50" />
-      <AgentCard name="FollowUpAgent" role="Retention" desc="Initiates contact post-clinic visit. Sends mood tracking surveys and adherence nudges. Alerts clinic dashboard if user misses follow-ups." color="border-amber-200 bg-amber-50" />
+  <div className="space-y-5 text-[#2c3028]">
+    <h3 className="text-2xl font-serif font-bold border-b border-[#f0ece5] pb-3">8 Gemini 2.0 Flash AI Agents</h3>
+    <p className="text-sm text-[#6b7265]">All agents call Gemini 2.0 Flash directly. Every agent has a fallback so the app works even without an API key.</p>
+    <div className="grid gap-3">
+      {[
+        { name: 'TriageAgent',            role: 'Warm Opening',        color: 'border-[#c8e6c9] bg-[#e8f5e9]', accent: 'text-[#2e7d32]',  desc: 'Reads the user\'s exact words and responds in 2 warm sentences. References their specific language. If ChatGPT history provided, acknowledges it and weaves it in. Never generic.' },
+        { name: 'ConversationalScreener', role: 'Non-Linear Questions', color: 'border-[#bbdefb] bg-[#e3f2fd]', accent: 'text-[#1565c0]',  desc: 'Generates each PHQ-2 / GAD-2 question based on the user\'s PREVIOUS answer. This is what makes screening non-linear - each question references what they just said.' },
+        { name: 'BridgeAgent',            role: 'Empathetic Bridge',    color: 'border-[#d1c4e9] bg-[#ede7f6]', accent: 'text-[#7b1fa2]',  desc: 'Between each question, generates a single warm acknowledgment sentence (max 15 words) that validates what the user shared before moving on.' },
+        { name: 'RiskAgent',              role: 'Scoring & Sentiment',  color: 'border-[#f8bbd0] bg-[#fce4ec]', accent: 'text-[#c62828]',  desc: 'Analyses PHQ-2 + GAD-2 scores AND the full conversation text. Returns 0-100 risk score, personalised message, key clinical insight, and sentiment flag (e.g. "minimising", "overwhelmed"). JSON output.' },
+        { name: 'TherapyAgent',           role: 'CBT Intervention',     color: 'border-[#c8e6c9] bg-[#e8f5e9]', accent: 'text-[#2e7d32]',  desc: 'Picks the single most appropriate CBT technique: box breathing (anxiety), 5-4-3-2-1 grounding (rumination), behavioural activation (depression), thought challenging (beliefs), PMR (tension). Personalises rationale.' },
+        { name: 'CareNavigatorAgent',     role: 'Personalised Steps',   color: 'border-[#ffe082] bg-[#fff8e1]', accent: 'text-[#f57f17]',  desc: 'Generates 3 specific, actionable next steps that reference the user\'s situation. HIGH: crisis helpline first. MODERATE: GP visit. LOW: maintain strengths. Never generic advice.' },
+        { name: 'FollowUpAgent',          role: 'Retention',            color: 'border-[#bbdefb] bg-[#e3f2fd]', accent: 'text-[#1565c0]',  desc: 'Generates a personalised 7-day check-in question shown at the end of results. In production, used to re-engage patients via automated message with context from their original screening.' },
+        { name: 'FreeTextAgent',          role: 'Mid-Screening Support', color: 'border-[#d8d0c4] bg-[#f5f0e8]', accent: 'text-[#6b7265]', desc: 'Handles anything the user types freely during the chat. 2 sentences max. If crisis language detected, directs to Directory tab. Otherwise validates and gently guides back to the screening.' },
+      ].map(a => (
+        <div key={a.name} className={`p-4 rounded-xl border-2 ${a.color}`}>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h4 className={`font-bold ${a.accent}`}>{a.name}</h4>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6b7265] bg-white px-2 py-0.5 rounded-full border border-[#d8d0c4] shrink-0">{a.role}</span>
+          </div>
+          <p className="text-xs text-[#2c3028] leading-relaxed">{a.desc}</p>
+        </div>
+      ))}
     </div>
   </div>
 );
 
 const ConversationsTab = () => (
   <div className="space-y-6 text-[#2c3028]">
-    <h3 className="text-2xl font-serif font-bold border-b pb-2">Sample WhatsApp Conversation</h3>
-    <div className="bg-[#e5ddd0] p-4 rounded-2xl max-w-md mx-auto space-y-4 font-sans text-sm">
-      <ChatBubble sender="user" text="Hi, I've been feeling really overwhelmed lately. I can't sleep." />
-      <ChatBubble sender="bot" text="Hi there. I'm the MindBridge assistant. I'm sorry you're feeling overwhelmed. To help me understand better, over the last 2 weeks, how often have you been bothered by feeling nervous, anxious, or on edge?" agent="TriageAgent" />
-      <ChatBubble sender="user" text="Almost every day. It's exhausting." />
-      <ChatBubble sender="bot" text="I hear you, that sounds really difficult. And how often have you felt down, depressed, or hopeless?" agent="TriageAgent" />
-      <ChatBubble sender="user" text="Maybe a few days a week." />
-      <ChatBubble sender="bot" text="Thank you for sharing that with me. Based on what you've told me, it might be helpful to speak with a healthcare professional who can support you. I can help you find a primary care clinic nearby that is trained to help. Would you like me to look up the closest one?" agent="RiskAgent -> CareNavigator" />
-      <ChatBubble sender="user" text="Yes, please. I live in South District." />
-      <ChatBubble sender="bot" text="I found 'South District Community Health Centre' about 2km away. They have walk-in hours tomorrow morning. I've sent a secure, anonymous referral. In the meantime, would you like to try a 3-minute guided breathing exercise to help with the overwhelm right now?" agent="CareNavigator -> TherapyAgent" />
+    <h3 className="text-2xl font-serif font-bold border-b border-[#f0ece5] pb-3">Sample Screening Flow</h3>
+    <div className="grid md:grid-cols-2 gap-6">
+      <div>
+        <h4 className="font-bold text-sm text-[#4a7c59] mb-3 uppercase tracking-wider">Patient Experience</h4>
+        <div className="bg-[#f7f3ed] rounded-2xl p-4 space-y-3 text-sm">
+          {[
+            { step: '1', label: 'ChatGPT Panel', desc: 'Copy prompt, paste into ChatGPT, paste summary back. Adds historical context to all agents.', icon: '🤖' },
+            { step: '2', label: 'MoodWheel', desc: 'Tap one of 6 mood options. TriageAgent responds personally referencing this exact choice.', icon: '🎡' },
+            { step: '3', label: 'ThoughtBubble', desc: 'Multi-select chips ("I can\'t stop worrying" etc). Adds qualitative context before clinical questions.', icon: '💭' },
+            { step: '4', label: 'EnergySlider', desc: 'Drag slider 1-10. Energy captured as additional context for RiskAgent.', icon: '⚡' },
+            { step: '5', label: 'PHQ-2 Questions', desc: 'ConversationalScreener generates each question from the previous answer. Non-linear.', icon: '📋' },
+            { step: '6', label: 'MiniBreathing', desc: 'Mid-screening breathing exercise with animated circle. Optional (has Skip).', icon: '🌬️' },
+            { step: '7', label: 'SleepCheck + GAD-2', desc: 'Sleep duration captured, then final 2 anxiety questions.', icon: '💤' },
+            { step: '8', label: 'Results', desc: '4 agents run: RiskAgent, TherapyAgent, CareNavigator, FollowUpAgent. All show as live ticks.', icon: '✅' },
+          ].map(s => (
+            <div key={s.step} className="flex gap-3">
+              <span className="w-5 h-5 bg-[#4a7c59] text-white rounded-full text-[10px] flex items-center justify-center font-bold shrink-0 mt-0.5">{s.step}</span>
+              <div>
+                <span className="font-bold text-[#2c3028]">{s.icon} {s.label}</span>
+                <span className="text-[#6b7265] text-xs block">{s.desc}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="font-bold text-sm text-[#c62828] mb-3 uppercase tracking-wider">Crisis Pathway</h4>
+        <div className="bg-[#fdfaf4] rounded-2xl p-4 space-y-3 text-xs border border-[#d8d0c4]">
+          {[
+            { from: 'Patient', msg: 'I\'ve been feeling really hopeless lately. Nothing seems worth it anymore.' },
+            { from: 'TriageAgent', msg: 'I can hear how exhausted you are, and I want you to know that reaching out right now matters. Let me ask you a few questions so I can understand what you\'ve been going through.' },
+            { from: 'Patient (Q1)', msg: 'Nearly every day - I feel no interest in anything.' },
+            { from: 'BridgeAgent', msg: 'That sounds genuinely exhausting.' },
+            { from: 'Patient (Q2-4)', msg: '[Answers all 4 questions with high scores]' },
+            { from: 'RiskAgent', msg: 'Score: 83/100 - High Risk. Insight: User shows signs of anhedonia and hopelessness. Sentiment: Not minimising - expressing genuine distress.' },
+            { from: 'CareNavigator', msg: '1. Find your crisis helpline in Directory now. 2. Visit your GP today. 3. Tell one trusted person.' },
+            { from: 'System', msg: 'Crisis booking panel appears. User selects Dr Sarah Chen. Jit.si video link auto-generated. Appointment status: CONFIRMED.' },
+          ].map((m, i) => (
+            <div key={i} className={`rounded-xl p-2.5 ${m.from.startsWith('Patient') ? 'bg-[#4a7c59] text-white ml-4' : m.from === 'System' ? 'bg-[#fce4ec] border border-[#f48fb1]' : 'bg-white border border-[#d8d0c4]'}`}>
+              <div className={`text-[9px] font-bold mb-0.5 ${m.from.startsWith('Patient') ? 'text-white/70' : m.from === 'System' ? 'text-[#c62828]' : 'text-[#4a7c59]'}`}>{m.from}</div>
+              <div className={m.from.startsWith('Patient') ? 'text-white' : 'text-[#2c3028]'}>{m.msg}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -170,39 +259,16 @@ const ConversationsTab = () => (
 const SchemaBlock = ({ title, code }: any) => (
   <div className="bg-gray-900 rounded-xl overflow-hidden">
     <div className="bg-gray-800 text-gray-300 px-4 py-2 text-xs font-mono border-b border-gray-700">{title}</div>
-    <pre className="p-4 text-green-400 text-sm font-mono overflow-x-auto"><code>{code}</code></pre>
+    <pre className="p-4 text-green-400 text-sm font-mono overflow-x-auto leading-relaxed"><code>{code}</code></pre>
   </div>
 );
 
 const ApiBlock = ({ method, endpoint, desc }: any) => (
-  <div className="flex flex-col md:flex-row gap-4 p-4 border border-gray-200 rounded-xl bg-gray-50">
-    <div className="flex items-center gap-2 md:w-1/3">
-      <span className={`px-2 py-1 rounded text-xs font-bold text-white ${method === 'GET' ? 'bg-blue-500' : 'bg-green-500'}`}>{method}</span>
-      <code className="text-sm font-mono font-bold text-gray-800">{endpoint}</code>
+  <div className="flex flex-col md:flex-row gap-3 p-4 border border-[#d8d0c4] rounded-xl bg-[#fdfaf4] hover:border-[#4a7c59]/30 transition-colors">
+    <div className="flex items-center gap-2 md:w-5/12 shrink-0">
+      <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white shrink-0 ${method === 'GET' ? 'bg-[#1565c0]' : method === 'POST' ? 'bg-[#2e7d32]' : 'bg-[#f57f17]'}`}>{method}</span>
+      <code className="text-xs font-mono font-bold text-[#2c3028] break-all">{endpoint}</code>
     </div>
-    <div className="md:w-2/3 text-sm text-gray-600">{desc}</div>
-  </div>
-);
-
-const AgentCard = ({ name, role, desc, color }: any) => (
-  <div className={`p-4 rounded-xl border ${color}`}>
-    <div className="flex items-center justify-between mb-2">
-      <h4 className="font-bold text-lg">{name}</h4>
-      <span className="text-xs font-bold uppercase tracking-wider opacity-70">{role}</span>
-    </div>
-    <p className="text-sm opacity-90">{desc}</p>
-  </div>
-);
-
-const ChatBubble = ({ sender, text, agent }: any) => (
-  <div className={`flex flex-col ${sender === 'user' ? 'items-end' : 'items-start'}`}>
-    {agent && <span className="text-[10px] text-gray-500 mb-1 ml-1">{agent}</span>}
-    <div className={`px-4 py-2 rounded-2xl max-w-[85%] ${
-      sender === 'user' 
-        ? 'bg-[#4a7c59] text-white rounded-tr-sm' 
-        : 'bg-white text-[#2c3028] rounded-tl-sm shadow-sm'
-    }`}>
-      {text}
-    </div>
+    <div className="text-xs text-[#6b7265] leading-relaxed">{desc}</div>
   </div>
 );

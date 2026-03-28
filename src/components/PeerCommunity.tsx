@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Heart, Send, Shield, AlertTriangle, X, Phone, Wind, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -20,11 +20,26 @@ const SEED_POSTS = [
   { id: 3, text: "To anyone reading this who feels alone: you matter, and things can get better. Keep holding on. 💚", likes: 56, time: '1 day ago', avatarBg: 'bg-[#b8d4ba]', emoji: '🌟', liked: false },
 ];
 
+const STORAGE_KEY = 'mb_peer_posts';
+const MAX_CHARS = 400;
+
+function loadPosts() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : SEED_POSTS;
+  } catch { return SEED_POSTS; }
+}
+
 export default function PeerCommunity({ setTab }: { setTab?: (tab: string) => void }) {
-  const [posts, setPosts] = useState(SEED_POSTS);
+  const [posts, setPosts] = useState(() => loadPosts());
   const [newPost, setNewPost] = useState('');
   const [alert, setAlert] = useState<{ type: 'crisis' | 'help' | 'support'; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Persist posts to localStorage
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts.slice(0, 50))); } catch {}
+  }, [posts]);
 
   const handleTextChange = (val: string) => {
     setNewPost(val);
@@ -84,16 +99,20 @@ export default function PeerCommunity({ setTab }: { setTab?: (tab: string) => vo
 
         <form onSubmit={handleSubmit} className="relative z-10">
           <div className="flex items-center gap-2 mb-4 text-[#4a7c59] font-semibold text-sm">
-            <Shield size={16} className="text-[#7a9e7e]" /> Safe & Anonymous Space — your identity is never stored
+            <Shield size={16} className="text-[#7a9e7e]" /> Safe & Anonymous Space - your identity is never stored
           </div>
 
           <textarea
             value={newPost}
-            onChange={e => handleTextChange(e.target.value)}
+            onChange={e => handleTextChange(e.target.value.slice(0, MAX_CHARS))}
+            maxLength={MAX_CHARS}
             placeholder="Share what's on your mind… a small win, a struggle, or words of encouragement for others."
             className="w-full bg-[#fdfaf4] border-2 border-[#f0ece5] rounded-2xl p-5 text-base focus:outline-none focus:border-[#7a9e7e] focus:ring-4 focus:ring-[#7a9e7e]/10 resize-none h-28 transition-all placeholder:text-[#a3a89f]"
             disabled={isSubmitting}
           />
+          <div className={`text-right text-xs mt-1 transition-colors ${newPost.length > MAX_CHARS * 0.85 ? 'text-[#c4605a] font-bold' : 'text-[#a3a89f]'}`}>
+            {newPost.length}/{MAX_CHARS}
+          </div>
 
           {/* Trigger word alert */}
           <AnimatePresence>
@@ -110,7 +129,7 @@ export default function PeerCommunity({ setTab }: { setTab?: (tab: string) => vo
                       <AlertTriangle size={20} className="text-[#c62828] shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <div className="font-bold text-[#c62828] mb-1">We noticed you may be in crisis</div>
-                        <p className="text-sm text-[#2c3028] mb-3">You don't have to face this alone. Please reach out to a crisis helpline right now — trained support is available 24/7 in your country.</p>
+                        <p className="text-sm text-[#2c3028] mb-3">You don't have to face this alone. Please reach out to a crisis helpline right now - trained support is available 24/7 in your country.</p>
                         <div className="flex flex-wrap gap-2">
                           <button type="button" onClick={() => setTab && setTab('directory')}
                             className="bg-[#c62828] text-white px-4 py-2 rounded-full text-sm font-bold flex items-center gap-1.5 hover:bg-[#b71c1c] transition-all">

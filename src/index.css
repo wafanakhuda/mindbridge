@@ -10,7 +10,7 @@
     --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   }
 
-  /* Softer, calmer green palette — override Tailwind hardcoded values via CSS vars */
+  /* Softer, calmer green palette - override Tailwind hardcoded values via CSS vars */
   body {
     /* nav/hero dark: softer forest #3a6b3e instead of #2d5a30 */
     --c-nav: #4a7c59;

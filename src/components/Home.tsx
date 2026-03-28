@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import Disclaimer from './Disclaimer';
-import { ArrowRight, MessageCircle, ShieldCheck, Users, Activity, Sparkles } from 'lucide-react';
+import { ArrowRight, Phone, ShieldCheck, Users, Activity, Sparkles } from 'lucide-react';
 
 export default function Home({ setTab }: { setTab: (tab: string) => void }) {
   const containerVariants = {
@@ -38,7 +38,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
             transition={{ duration: 1, ease: "easeOut" }}
           >
             <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium tracking-wide mb-8 backdrop-blur-md shadow-lg">
-              Hack for Health Equity 2026 · Bridging Communities to Mental Health Care
+              Hack for Health Equity 2026 - Bridging Communities to Mental Health Care
             </span>
             <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-[1.1] mb-6 drop-shadow-2xl">
               Mental health support,<br/>
@@ -50,29 +50,27 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
               </em>
             </h1>
             <p className="text-white/90 text-lg md:text-2xl mb-10 max-w-3xl mx-auto font-light leading-relaxed drop-shadow-md">
-              A hybrid community–primary care mental health system connecting AI screening, clinic referrals, and structured follow-up — for every community, in 195 countries.
+              A hybrid community-primary care mental health system connecting AI screening, clinic referrals, and structured follow-up - for every community, in 195 countries.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button 
-                onClick={() => setTab('screening')} 
+              <button
+                onClick={() => setTab('screening')}
                 className="group relative overflow-hidden bg-[#d4843a] text-white px-8 py-4 rounded-full font-semibold shadow-[0_0_40px_rgba(212,132,58,0.4)] transition-all hover:scale-105 hover:shadow-[0_0_60px_rgba(212,132,58,0.6)] flex items-center gap-2 w-full sm:w-auto justify-center"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Start AI Triage <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  Start Free Screening <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#c07030] to-[#d4843a] opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </button>
-              
-              <a 
-                href="https://wa.me/?text=Hi%20MindBridge,%20I%20need%20mental%20health%20support" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group bg-[#25D366]/10 border border-[#25D366]/30 hover:bg-[#25D366] hover:border-[#25D366] text-white px-8 py-4 rounded-full font-medium transition-all backdrop-blur-sm flex items-center gap-2 w-full sm:w-auto justify-center shadow-lg"
+
+              <button
+                onClick={() => setTab('directory')}
+                className="group bg-white/10 border border-white/30 hover:bg-white/20 text-white px-8 py-4 rounded-full font-medium transition-all backdrop-blur-sm flex items-center gap-2 w-full sm:w-auto justify-center shadow-lg"
               >
-                <MessageCircle size={20} className="group-hover:text-white text-[#25D366] transition-colors" />
-                <span>WhatsApp Bot</span>
-              </a>
+                <Phone size={18} className="text-white/80" />
+                <span>Crisis Helplines</span>
+              </button>
             </div>
           </motion.div>
         </div>
@@ -108,7 +106,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
           >
             <div className="text-center mb-8">
               <span className="inline-block bg-[#e8f5e9] text-[#4a7c59] text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-[#c8e6c9] mb-3">The MindBridge Care Pathway</span>
-              <p className="text-[#2c3028] font-serif text-lg md:text-xl italic max-w-2xl mx-auto">"This is not because care does not exist. It is because the pathway to care is broken." — WHO, 2025</p>
+              <p className="text-[#2c3028] font-serif text-lg md:text-xl italic max-w-2xl mx-auto">"The mental health treatment gap is not because care does not exist - it is because the pathway to care is broken." - WHO Mental Health Atlas, 2022</p>
             </div>
             <div className="flex flex-col md:flex-row items-stretch justify-center gap-3 md:gap-0 mb-8">
               {[
@@ -143,51 +141,51 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-16">
           <h2 className="font-serif text-4xl md:text-5xl text-[#2c3028] mb-6">How MindBridge Works</h2>
-          <p className="text-lg text-[#6b7265] max-w-2xl mx-auto">A seamless, hybrid system bridging the gap between community isolation and primary care.</p>
+          <p className="text-lg text-[#6b7265] max-w-2xl mx-auto">Five specialist AI agents working together across a complete mental health care pathway.</p>
         </div>
 
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
-          <FeatureCard 
+          <FeatureCard
             icon={<MessageCircle size={28} className="text-[#4d7a52]" />}
-            title="Multi-Agent Triage"
-            desc="WhatsApp bot uses TriageAgent & RiskAgent for PHQ-2/GAD-2 screening and crisis detection."
+            title="TriageAgent"
+            desc="Reads exactly what you share and responds personally. Guides you through validated PHQ-2 and GAD-2 questions."
             imgUrl="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=400&h=300"
           />
-          <FeatureCard 
+          <FeatureCard
             icon={<Activity size={28} className="text-[#d4843a]" />}
-            title="Primary Care Link"
-            desc="CareNavigator routes high-risk users to nearby clinics. Clinics use PHQ-9/GAD-7 dashboards."
+            title="RiskAgent"
+            desc="Analyses your scores and your language together. Returns a 0-100 risk score, personal insight, and sentiment observation."
             imgUrl="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=400&h=300"
           />
-          <FeatureCard 
+          <FeatureCard
             icon={<ShieldCheck size={28} className="text-[#7baec8]" />}
-            title="Follow-Up Engine"
-            desc="FollowUpAgent sends automated SMS check-ins, mood surveys, and adherence nudges."
+            title="TherapyAgent"
+            desc="Picks the most appropriate CBT exercise for you - box breathing, grounding, behavioural activation, or thought challenging."
             imgUrl="https://images.unsplash.com/photo-1512314889357-e157c22f938d?auto=format&fit=crop&q=80&w=400&h=300"
           />
-          <FeatureCard 
+          <FeatureCard
             icon={<Users size={28} className="text-[#c4605a]" />}
-            title="Community Intel"
-            desc="Aggregated, anonymized data creates risk heatmaps for public health monitoring."
+            title="CareNavigator + FollowUpAgent"
+            desc="Routes you to appropriate care with personalised next steps. Schedules 7, 30, and 90-day check-in questions."
             imgUrl="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=400&h=300"
           />
         </motion.div>
       </div>
 
       <div className="max-w-4xl mx-auto px-6 pb-24 text-center">
-        <motion.blockquote 
+        <motion.blockquote
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           className="text-2xl md:text-3xl font-serif text-[#4d7a52] italic mb-12 leading-relaxed"
         >
-          "This is not because care does not exist. It is because the pathway to care is broken."
+          "The mental health treatment gap is not because care does not exist - it is because the pathway to care is broken." - WHO Mental Health Atlas, 2022
         </motion.blockquote>
         
         <Disclaimer />

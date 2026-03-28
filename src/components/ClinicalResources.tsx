@@ -8,7 +8,7 @@ const SCREENING_TOOLS = [
     full: 'Patient Health Questionnaire-9',
     condition: 'Depression',
     color: 'bg-[#e3f2fd] border-[#bbdefb] text-[#1565c0]',
-    scoring: 'Score 0–4: Minimal · 5–9: Mild · 10–14: Moderate · 15–19: Moderately severe · 20–27: Severe',
+    scoring: 'Score 0-4: Minimal - 5-9: Mild - 10-14: Moderate - 15-19: Moderately severe - 20-27: Severe',
     cutoff: '≥10 suggests moderate depression requiring treatment',
     questions: [
       'Little interest or pleasure in doing things',
@@ -16,12 +16,12 @@ const SCREENING_TOOLS = [
       'Trouble falling or staying asleep, or sleeping too much',
       'Feeling tired or having little energy',
       'Poor appetite or overeating',
-      'Feeling bad about yourself — or that you are a failure',
+      'Feeling bad about yourself - or that you are a failure',
       'Trouble concentrating on things (reading, TV)',
       'Moving or speaking slowly / being fidgety or restless',
       'Thoughts that you would be better off dead or hurting yourself',
     ],
-    options: 'Not at all (0) · Several days (1) · More than half the days (2) · Nearly every day (3)',
+    options: 'Not at all (0) - Several days (1) - More than half the days (2) - Nearly every day (3)',
     link: 'https://www.phqscreeners.com/',
   },
   {
@@ -29,7 +29,7 @@ const SCREENING_TOOLS = [
     full: 'Generalised Anxiety Disorder-7',
     condition: 'Anxiety',
     color: 'bg-[#fff8e1] border-[#ffe082] text-[#f57f17]',
-    scoring: 'Score 0–4: Minimal · 5–9: Mild · 10–14: Moderate · 15–21: Severe',
+    scoring: 'Score 0-4: Minimal - 5-9: Mild - 10-14: Moderate - 15-21: Severe',
     cutoff: '≥10 suggests moderate anxiety requiring further evaluation',
     questions: [
       'Feeling nervous, anxious, or on edge',
@@ -40,7 +40,7 @@ const SCREENING_TOOLS = [
       'Becoming easily annoyed or irritable',
       'Feeling afraid as if something awful might happen',
     ],
-    options: 'Not at all (0) · Several days (1) · More than half the days (2) · Nearly every day (3)',
+    options: 'Not at all (0) - Several days (1) - More than half the days (2) - Nearly every day (3)',
     link: 'https://www.phqscreeners.com/',
   },
   {
@@ -48,7 +48,7 @@ const SCREENING_TOOLS = [
     full: 'Major Depression Inventory',
     condition: 'Depression (ICD-10)',
     color: 'bg-[#f3e5f5] border-[#e1bee7] text-[#7b1fa2]',
-    scoring: 'Score 0–25: No/minimal · 26–43: Mild · 44–53: Moderate · 54–62: Severe · 63+: Very severe',
+    scoring: 'Score 0-25: No/minimal - 26-43: Mild - 44-53: Moderate - 54-62: Severe - 63+: Very severe',
     cutoff: '≥26 suggests mild depression; ≥44 indicates clinically significant depressive episode',
     questions: [
       'Have you felt low in spirits or sad?',
@@ -64,7 +64,7 @@ const SCREENING_TOOLS = [
       'Have you suffered from reduced appetite?',
       'Have you suffered from increased appetite?',
     ],
-    options: 'At no time (0) · Some of the time (1) · Slightly less than half the time (2) · Slightly more than half the time (3) · Most of the time (4) · All the time (5)',
+    options: 'At no time (0) - Some of the time (1) - Slightly less than half the time (2) - Slightly more than half the time (3) - Most of the time (4) - All the time (5)',
     link: 'https://www.psykiatri-regionh.dk/who-5/Documents/MDI%20English.pdf',
   },
   {
@@ -72,7 +72,7 @@ const SCREENING_TOOLS = [
     full: 'PTSD Checklist (DSM-5)',
     condition: 'PTSD',
     color: 'bg-[#fce4ec] border-[#f8bbd0] text-[#c62828]',
-    scoring: 'Score 0–80. Provisional PTSD diagnosis threshold: ≥33',
+    scoring: 'Score 0-80. Provisional PTSD diagnosis threshold: ≥33',
     cutoff: '≥33 warrants full PTSD assessment by a clinician',
     questions: [
       'Repeated, disturbing memories, thoughts, or images of a stressful experience',
@@ -86,7 +86,7 @@ const SCREENING_TOOLS = [
       'Having strong negative beliefs about yourself, other people, or the world',
       'Blaming yourself or someone else for a stressful experience or what happened after',
     ],
-    options: 'Not at all (0) · A little bit (1) · Moderately (2) · Quite a bit (3) · Extremely (4)',
+    options: 'Not at all (0) - A little bit (1) - Moderately (2) - Quite a bit (3) - Extremely (4)',
     link: 'https://www.ptsd.va.gov/professional/assessment/adult-sr/ptsd-checklist.asp',
   },
 ];
@@ -288,7 +288,7 @@ export default function ClinicalResources() {
           {[
             { title: 'Safety Assessment', icon: '🔴', items: ['Ask directly: "Are you thinking about suicide?"', 'Assess plan, means, intent, timeline', 'Protective factors: family, religion, future plans', 'Document and refer immediately if high risk'] },
             { title: 'Referral Thresholds', icon: '🔵', items: ['PHQ-9 ≥15 → Urgent psychiatry referral', 'Active suicidal ideation → Emergency department', 'GAD-7 ≥15 + functional impairment → Specialist', 'PHQ-9 10-14 + GAD-7 10-14 → Structured therapy'] },
-            { title: 'First-Line Treatments', icon: '🟢', items: ['Mild–moderate depression: CBT or structured self-help', 'Moderate–severe: SSRI + therapy combination', 'GAD: CBT first-line; SSRI/SNRI if medication needed', 'Follow up within 2–4 weeks of starting treatment'] },
+            { title: 'First-Line Treatments', icon: '🟢', items: ['Mild-moderate depression: CBT or structured self-help', 'Moderate-severe: SSRI + therapy combination', 'GAD: CBT first-line; SSRI/SNRI if medication needed', 'Follow up within 2-4 weeks of starting treatment'] },
           ].map(card => (
             <div key={card.title} className="bg-white border border-[#d8d0c4] rounded-2xl p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">

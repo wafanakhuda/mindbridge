@@ -49,7 +49,7 @@ export default function Team() {
         </div>
         <h2 className="font-serif text-4xl md:text-5xl text-[#2c3028] mb-4">Meet the Team</h2>
         <p className="text-lg text-[#6b7265] max-w-xl mx-auto">
-          Four specialists united by one mission — making mental health care accessible to every community, everywhere.
+          Four specialists united by one mission - making mental health care accessible to every community, everywhere.
         </p>
       </div>
 
@@ -89,7 +89,7 @@ export default function Team() {
           "Mental Health Should Not Be a Privilege."
         </h3>
         <p className="text-white/80 text-lg max-w-2xl mx-auto leading-relaxed mb-6">
-          MindBridge is a hybrid community–primary care mental health system. Not just a chatbot — a connected pathway from screening to care to follow-up, for 195 countries.
+          MindBridge is a hybrid community-primary care mental health system. Not just a chatbot - a connected pathway from screening to care to follow-up, for 195 countries.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3 text-sm font-semibold">
           {['End-to-end care pathway', 'AI-powered screening', '195 countries', 'Anonymised & private', 'Free for everyone'].map(tag => (
@@ -99,7 +99,7 @@ export default function Team() {
           ))}
         </div>
         <div className="mt-8 text-white/60 text-sm">
-          Hack for Health Equity 2026 · Young AI Leaders Madrid & Linz Hub · AI for Good — United Nations
+          Hack for Health Equity 2026 - Young AI Leaders Madrid & Linz Hub - AI for Good - United Nations
         </div>
       </motion.div>
     </motion.div>
