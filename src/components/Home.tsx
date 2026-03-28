@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import Disclaimer from './Disclaimer';
-import { ArrowRight, Phone, ShieldCheck, Users, Activity, Sparkles } from 'lucide-react';
+import { ArrowRight, Phone, MessageCircle, ShieldCheck, Users, Activity, Sparkles } from 'lucide-react';
 
 export default function Home({ setTab }: { setTab: (tab: string) => void }) {
   const containerVariants = {
