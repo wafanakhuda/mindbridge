@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Home as HomeIcon, MessageCircle, Phone, BookOpen, BarChart3, LogOut, ShieldCheck, Stethoscope, Activity, LayoutGrid, X, Video, Users, Globe2, Heart } from 'lucide-react';
 import Home from './components/Home';
 import Screening from './components/Screening';
@@ -16,11 +17,46 @@ import VideoConsult from './components/VideoConsult';
 import { clearAuth, getStoredUser } from './api';
 
 export default function App() {
-  const [userRole, setUserRole]           = useState<string | null>(null);
-  const [currentUser, setCurrentUser]     = useState<any>(null);
-  const [currentTab, setCurrentTab]       = useState('home');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Route map — URL path to tab id
+  const ROUTES: Record<string, string> = {
+    '/': 'home', '/home': 'home',
+    '/screening': 'screening', '/check-in': 'screening',
+    '/community': 'community',
+    '/peer': 'peer', '/peer-space': 'peer',
+    '/directory': 'directory', '/helplines': 'directory',
+    '/resources': 'resources',
+    '/clinical': 'clinical', '/clinical-tools': 'clinical',
+    '/dashboard': 'dashboard',
+    '/my-health': 'myhealth', '/myhealth': 'myhealth',
+    '/team': 'team', '/our-team': 'team',
+    '/video': 'video', '/video-consult': 'video',
+    '/admin': 'admin',
+  };
+  const TAB_TO_PATH: Record<string, string> = {
+    home: '/', screening: '/screening', community: '/community',
+    peer: '/peer', directory: '/helplines', resources: '/resources',
+    clinical: '/clinical', dashboard: '/dashboard',
+    myhealth: '/my-health', team: '/our-team',
+    video: '/video', admin: '/admin',
+  };
+
+  const [userRole, setUserRole]               = useState<string | null>(null);
+  const [currentUser, setCurrentUser]         = useState<any>(null);
   const [showCrisisStrip, setShowCrisisStrip] = useState(true);
-  const [showMoreMenu, setShowMoreMenu]   = useState(false);
+  const [showMoreMenu, setShowMoreMenu]       = useState(false);
+
+  // Derive current tab from URL
+  const currentTab = ROUTES[location.pathname] || 'home';
+
+  // Navigate to tab → update URL
+  const setCurrentTab = (tab: string) => {
+    const path = TAB_TO_PATH[tab] || '/';
+    navigate(path);
+    setShowMoreMenu(false);
+  };
 
   // Restore session on mount
   useEffect(() => {
@@ -38,8 +74,8 @@ export default function App() {
     clearAuth();
     setUserRole(null);
     setCurrentUser(null);
-    setCurrentTab('home');
     setShowCrisisStrip(true);
+    navigate('/');
   };
 
   if (!userRole) return <SignIn onSignIn={handleSignIn} />;
