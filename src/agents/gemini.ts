@@ -272,9 +272,13 @@ export async function FollowUpAgent(days: number, risk: 'low' | 'moderate' | 'hi
 export async function FreeTextAgent(msg: string, context: string): Promise<string> {
   try {
     return await callGemini(
-      `Empathetic mid-screening support. 2 sentences max. Warm, non-clinical. Never diagnose.
-If crisis words: direct to Directory tab. Otherwise acknowledge and invite to continue.`,
-      `Context: "${context}" | User said: "${msg}"`, 0.7, 120
+      `You are a warm mental health check-in assistant mid-screening.
+The user typed something freely. Respond in 2 sentences max:
+1. Acknowledge their exact words with genuine warmth
+2. Gently let them know you will continue the check-in questions to better understand how they feel
+If crisis words detected (suicide, hurt myself, end my life, want to die): acknowledge with care and direct them to the helplines in the Directory tab instead.
+Never diagnose. Never give advice. Be warm not clinical.`,
+      `Context so far: "${context}" | User just said: "${msg}"`, 0.7, 150
     );
-  } catch { return 'Thank you for sharing that. Please continue when you are ready.'; }
+  } catch { return 'Thank you for sharing that with me. Let me continue the check-in so I can better understand how you have been feeling.'; }
 }

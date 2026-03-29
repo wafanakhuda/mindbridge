@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Activity, Calendar, Clock, Video, RefreshCw, ChevronDown, ChevronUp, AlertTriangle, UserPlus, Lock } from 'lucide-react';
+import { Activity, Calendar, Clock, Video, RefreshCw, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { api, isOfflineDemo } from '../api';
 
 interface Screening {
@@ -44,7 +44,6 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'appointments' | 'screenings'>('appointments');
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -54,7 +53,6 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
     if (isOfflineDemo()) {
       setScreenings(DEMO_SCREENINGS);
       setAppointments(DEMO_APPOINTMENTS);
-      setIsDemo(true);
       setLoading(false);
       return;
     }
@@ -66,13 +64,11 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
       ]);
       setScreenings(sRes.screenings || []);
       setAppointments(aRes.appointments || []);
-      setIsDemo(false);
     } catch (e: any) {
       if (e.message === 'OFFLINE_MODE') {
         setScreenings(DEMO_SCREENINGS);
         setAppointments(DEMO_APPOINTMENTS);
-        setIsDemo(true);
-      } else {
+        } else {
         setError('Could not load your health record. Check your connection.');
       }
     } finally {
@@ -99,22 +95,6 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
         </button>
       </div>
 
-      {/* Demo mode banner */}
-      {isDemo && (
-        <div className="bg-[#fff8e1] border border-[#ffe082] rounded-2xl p-4 mb-5 flex items-start gap-3">
-          <Lock size={16} className="text-[#f57f17] shrink-0 mt-0.5" />
-          <div>
-            <div className="text-sm font-bold text-[#f57f17]">Showing demo data</div>
-            <p className="text-xs text-[#2c3028] mt-0.5">
-              You are using a demo account. Real health records save when you create a personal account and log in.
-            </p>
-            <button onClick={() => setTab && setTab('home')}
-              className="mt-2 flex items-center gap-1.5 bg-[#4a7c59] text-white px-3 py-1.5 rounded-full text-xs font-bold hover:bg-[#3a6b3e] transition-all">
-              <UserPlus size={12} /> Create real account
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Building2, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle, UserX, Stethoscope } from 'lucide-react';
+import { User, Building2, ShieldCheck, ArrowRight, Eye, EyeOff, AlertCircle, Stethoscope } from 'lucide-react';
 import { api, saveAuth } from '../api';
 
 type Mode = 'choose' | 'login' | 'register';
@@ -33,18 +33,6 @@ export default function SignIn({ onSignIn }: { onSignIn: (role: string, user: an
     setEmail(`${selectedRole}@mindbridge.demo`);
     setPassword('Demo1234!');
     setName('');
-  };
-
-  const handleAnonymous = () => {
-    const anonUser = {
-      id: 'anon-' + Date.now(),
-      email: 'anonymous@mindbridge.local',
-      name: 'Anonymous User',
-      role: 'patient',
-      isAnonymous: true,
-    };
-    saveAuth('demo-token-offline', anonUser);
-    onSignIn('patient', anonUser);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,31 +95,14 @@ export default function SignIn({ onSignIn }: { onSignIn: (role: string, user: an
                 description="Screen for anxiety and depression, access peer support, find crisis helplines, and book appointments."
                 color="bg-[#e8f5e9]" iconColor="text-[#2e7d32]" borderColor="border-[#c8e6c9]"
                 onClick={() => handlePortalSelect('patient')} />
-              <PersonaCard icon={<Stethoscope size={28} />} title="Doctor Portal"
-                description="Manage patient referrals, accept appointments, join video consultations, and track patient outcomes."
+              <PersonaCard icon={<Stethoscope size={28} />} title="Clinic Portal"
+                description="Clinic staff and doctors. Access patient dashboard, clinical screening tools, appointment management and follow-up tracking."
                 color="bg-[#e3f2fd]" iconColor="text-[#1565c0]" borderColor="border-[#bbdefb]"
                 onClick={() => handlePortalSelect('clinic', true)} />
               <PersonaCard icon={<ShieldCheck size={28} />} title="Admin Portal"
                 description="System-wide analytics, user management, crisis event logs, and platform health monitoring."
                 color="bg-[#f3e5f5]" iconColor="text-[#7b1fa2]" borderColor="border-[#e1bee7]"
                 onClick={() => handlePortalSelect('admin')} />
-            </div>
-
-            {/* Anonymous option */}
-            <div className="bg-white border border-[#d8d0c4] rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#f0ece5] flex items-center justify-center">
-                  <UserX size={20} className="text-[#6b7265]" />
-                </div>
-                <div>
-                  <div className="font-bold text-sm text-[#2c3028]">Continue anonymously</div>
-                  <div className="text-xs text-[#6b7265]">No account needed. Your data is never stored or linked to you.</div>
-                </div>
-              </div>
-              <button onClick={handleAnonymous}
-                className="shrink-0 bg-[#f0ece5] hover:bg-[#d8d0c4] text-[#2c3028] px-5 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-2">
-                <UserX size={14} /> Browse Anonymously
-              </button>
             </div>
           </motion.div>
         )}

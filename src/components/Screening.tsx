@@ -507,9 +507,24 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
     addUser(text);
     setIsLoading(true);
     await typing(700);
+
+    // Empathetic response with gentle redirect
     const reply = await FreeTextAgent(text, contextRef.current + ' ' + logRef.current);
     setIsLoading(false);
     addBot(reply);
+
+    // Resume screening after response - only if mid-questions (not before Q1 or after all 4 done)
+    if (qIdxRef.current > 0 && qIdxRef.current < 4) {
+      await typing(1400);
+      addBot('Let me continue where we left off.');
+      await typing(500);
+      await askQuestion(qIdxRef.current);
+    } else if (qIdxRef.current === 0) {
+      // Before questions started - gently prompt to continue with widgets
+      await typing(1400);
+      addBot('Whenever you are ready, please continue with the check-in above.');
+    }
+    // If qIdxRef.current === 4, all done - no redirect needed
   };
 
   const formatText = (text: string) =>
@@ -784,7 +799,6 @@ function Results({ scores, conversationLog, userContext, chatGptContext, onResta
         }
       } catch (e) {
         // Agents failed completely - show fallback results anyway
-        console.warn('Agent pipeline error:', e);
         setDone({ risk: true, nav: true, therapy: true, followup: true });
       } finally {
         setLoading(false);

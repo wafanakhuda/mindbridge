@@ -59,7 +59,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
                 className="group relative overflow-hidden bg-[#d4843a] text-white px-8 py-4 rounded-full font-semibold shadow-[0_0_40px_rgba(212,132,58,0.4)] transition-all hover:scale-105 hover:shadow-[0_0_60px_rgba(212,132,58,0.6)] flex items-center gap-2 w-full sm:w-auto justify-center"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Start Free Screening <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  Begin Check-In <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-[#c07030] to-[#d4843a] opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </button>
@@ -130,7 +130,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
                 onClick={() => setTab('screening')}
                 className="bg-[#d4843a] text-white px-10 py-3.5 rounded-full font-bold shadow-lg hover:bg-[#c07030] transition-all hover:shadow-xl hover:-translate-y-0.5 text-base"
               >
-                Start Free Screening
+                Begin Check-In
               </button>
             </div>
           </motion.div>
