@@ -230,8 +230,7 @@ export async function CareNavigatorAgent(
 ): Promise<string[]> {
   try {
     const raw = await callGemini(
-      `Generate exactly 3 personalised next steps as a JSON array of 3 strings. Raw JSON only.
-Each max 20 words. Warm not clinical. Reference their situation.
+      `Generate exactly 3 personalised next steps as a JSON array of 3 plain strings. Raw JSON only, no markdown. Each string max 20 words. Example: ["Step one here","Step two here","Step three here"]
 HIGH: step 1 = "Find your country crisis helpline in the Global Directory - call now"
 MODERATE: step 1 = GP visit this week
 LOW: focus on maintaining strengths`,
