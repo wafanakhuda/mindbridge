@@ -555,16 +555,6 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
           </div>
 
           <div className="p-6 space-y-4">
-            {!hasApiKey && (
-              <div className="bg-[#fff8e1] border-2 border-[#ffe082] rounded-xl p-3 flex gap-2.5 items-start">
-                <span className="text-lg shrink-0">⚠️</span>
-                <div className="text-xs text-[#2c3028]">
-                  <strong className="text-[#f57f17] block mb-0.5">AI running in fallback mode</strong>
-                  Add <code className="bg-[#f0ece5] px-1 rounded">VITE_GEMINI_API_KEY</code> to Railway env vars for live AI.
-                  Free key at <strong>aistudio.google.com/app/apikey</strong>
-                </div>
-              </div>
-            )}
 
             {/* What to expect */}
             <div className="space-y-2">

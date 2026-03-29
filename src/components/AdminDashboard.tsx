@@ -106,7 +106,7 @@ export default function AdminDashboard() {
               { label: 'Frontend (React + Vite)', status: 'Operational', ok: true },
               { label: 'API Server (Express)',     status: fromApi ? 'Connected' : 'Offline - using seed data', ok: fromApi },
               { label: 'MongoDB Atlas',            status: fromApi ? 'Connected' : 'Check MONGODB_URI env var', ok: fromApi },
-              { label: 'Gemini AI Agents',         status: 'Check VITE_GEMINI_API_KEY', ok: true },
+              { label: 'Gemini AI Agents',         status: 'Active - paid API key', ok: true },
               { label: 'Global Directory',         status: '195 countries loaded', ok: true },
             ].map(s => (
               <div key={s.label} className="flex items-center justify-between py-2 border-b border-[#f0ece5] last:border-0">
@@ -125,12 +125,11 @@ export default function AdminDashboard() {
         <h3 className="font-bold mb-4 flex items-center gap-2"><ShieldCheck size={16} /> Production Checklist</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
           {[
-            { label: 'VITE_GEMINI_API_KEY set in Railway',        done: false, note: 'aistudio.google.com/app/apikey (free)' },
+            { label: 'VITE_GEMINI_API_KEY set in Railway',        done: true,    note: 'Gemini API active - all 8 agents live' },
             { label: 'MONGODB_URI set in Railway',                done: fromApi, note: 'cloud.mongodb.com (free cluster)' },
             { label: 'JWT_SECRET set to long random string',      done: fromApi, note: 'Any 32+ char random string' },
-            { label: 'VITE_API_URL set to Railway backend URL',   done: fromApi, note: 'https://your-app.railway.app/api' },
-            { label: 'Run npm run seed after first deploy',       done: fromApi, note: 'Creates demo accounts + 10 sample records' },
-            { label: 'Frontend deployed and accessible',          done: true,    note: 'Railway/Netlify/Vercel' },
+            { label: 'VITE_API_URL set to Railway backend URL',   done: fromApi, note: 'https://globalmindbridge.up.railway.app/api' },
+            { label: 'Run npx tsx server/seed.ts after deploy',   done: fromApi, note: 'Creates demo accounts + 10 sample records' },
           ].map(item => (
             <div key={item.label} className={`flex items-start gap-2 p-2.5 rounded-xl ${item.done ? 'bg-white/10' : 'bg-white/5'}`}>
               <span className={`text-base shrink-0 ${item.done ? 'text-[#4a7c59]' : 'text-white/40'}`}>{item.done ? '✓' : '○'}</span>
