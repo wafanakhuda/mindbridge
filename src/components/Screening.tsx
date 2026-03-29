@@ -612,7 +612,7 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-xl mx-auto px-4 py-4">
       <div className="flex flex-col bg-white rounded-[2rem] shadow-2xl border border-[#d8d0c4] overflow-hidden"
-        style={{ height: '78vh', minHeight: '500px', maxHeight: '800px' }}>
+        style={{ height: 'calc(100dvh - 180px)', minHeight: '400px', maxHeight: '800px' }}>
 
         {/* Chat Header */}
         <div className="bg-[#4a7c59] px-4 py-3 flex items-center gap-3 shrink-0">
@@ -715,11 +715,12 @@ export default function Screening({ setTab, currentUser }: { setTab?: (tab: stri
               onKeyDown={e => e.key === 'Enter' && handleFreeText()}
               placeholder="Or type something..."
               disabled={isLoading || isTyping}
-              className="flex-1 bg-[#f7f3ed] border border-[#d8d0c4] rounded-full py-2 px-4 text-sm focus:outline-none focus:border-[#4a7c59] disabled:opacity-40 transition-all" />
+              className="flex-1 bg-[#f7f3ed] border border-[#d8d0c4] rounded-full py-2.5 px-4 text-base focus:outline-none focus:border-[#4a7c59] disabled:opacity-40 transition-all"
+              style={{ fontSize: '16px' }} />
             <motion.button whileTap={{ scale: 0.88 }} onClick={handleFreeText}
               disabled={!freeText.trim() || isLoading || isTyping}
-              className="w-8 h-8 bg-[#4a7c59] disabled:bg-[#d8d0c4] text-white rounded-full flex items-center justify-center transition-all shrink-0">
-              <Send size={13} className="ml-0.5" />
+              className="w-10 h-10 bg-[#4a7c59] disabled:bg-[#d8d0c4] text-white rounded-full flex items-center justify-center transition-all shrink-0">
+              <Send size={15} className="ml-0.5" />
             </motion.button>
           </div>
         </div>
@@ -892,7 +893,7 @@ function Results({ scores, conversationLog, userContext, chatGptContext, onResta
                 </div>
               </div>
               <ol className="space-y-1.5">
-                {therapy.steps.map((step, i) => (
+                {(therapy.steps || []).map((step, i) => (
                   <motion.li key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 + i * 0.07 }}
                     className="flex gap-2 text-xs text-[#2c3028]">
                     <span className="w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] flex items-center justify-center shrink-0 mt-0.5 font-bold">{i + 1}</span>
@@ -979,7 +980,7 @@ function Results({ scores, conversationLog, userContext, chatGptContext, onResta
           )}
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button onClick={() => setTab?.('home')} className="flex items-center justify-center gap-1.5 border-2 border-[#d8d0c4] text-[#6b7265] hover:border-[#4a7c59] hover:text-[#4a7c59] py-3 px-5 rounded-full text-sm font-semibold transition-all">
               Home
             </button>

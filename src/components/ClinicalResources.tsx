@@ -139,7 +139,7 @@ export default function ClinicalResources() {
   const [openDSM, setOpenDSM] = useState<string | null>(null);
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto px-6 py-12">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 bg-[#e3f2fd] text-[#1565c0] px-4 py-1.5 rounded-full text-sm font-bold mb-4 border border-[#bbdefb]">
@@ -160,7 +160,7 @@ export default function ClinicalResources() {
           {SCREENING_TOOLS.map(tool => (
             <div key={tool.name} className={`border-2 rounded-2xl overflow-hidden transition-all ${tool.color}`}>
               <button
-                onClick={() => setOpenTool(openTool === tool.name ? null : tool.name)}
+                onClick={() => setOpenTool(openTool === tool.name ? null : tool.name)} className="w-full"
                 className="w-full flex items-center justify-between p-5 text-left hover:opacity-90 transition-opacity"
               >
                 <div className="flex items-center gap-4">
@@ -173,7 +173,7 @@ export default function ClinicalResources() {
                 <div className="flex items-center gap-3">
                   <a href={tool.link} target="_blank" rel="noopener noreferrer"
                     onClick={e => e.stopPropagation()}
-                    className="hidden sm:flex items-center gap-1 text-xs font-bold opacity-75 hover:opacity-100 underline">
+                    className="flex items-center gap-1 text-xs font-bold opacity-75 hover:opacity-100 underline">
                     Official PDF <ExternalLink size={11} />
                   </a>
                   {openTool === tool.name ? <ChevronUp size={20} /> : <ChevronDown size={20} />}

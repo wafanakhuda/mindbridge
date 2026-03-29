@@ -14,7 +14,7 @@ export default function ArchitectureDocs({ onBack }: { onBack?: () => void }) {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-6 py-10">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       <div className="flex items-center gap-4 mb-8">
         {onBack && (
           <button onClick={onBack} className="p-2 bg-white rounded-full shadow-sm hover:bg-[#f0ece5] transition-colors border border-[#d8d0c4]">
@@ -181,7 +181,7 @@ const AgentsTab = () => (
   <div className="space-y-5 text-[#2c3028]">
     <h3 className="text-2xl font-serif font-bold border-b border-[#f0ece5] pb-3">8 Gemini 2.0 Flash AI Agents</h3>
     <p className="text-sm text-[#6b7265]">All agents call Gemini 2.0 Flash directly. Every agent has a fallback so the app works even without an API key.</p>
-    <div className="grid gap-3">
+    <div className="grid grid-cols-1 gap-3">
       {[
         { name: 'TriageAgent',            role: 'Warm Opening',        color: 'border-[#c8e6c9] bg-[#e8f5e9]', accent: 'text-[#2e7d32]',  desc: 'Reads the user\'s exact words and responds in 2 warm sentences. References their specific language. If ChatGPT history provided, acknowledges it and weaves it in. Never generic.' },
         { name: 'ConversationalScreener', role: 'Non-Linear Questions', color: 'border-[#bbdefb] bg-[#e3f2fd]', accent: 'text-[#1565c0]',  desc: 'Generates each PHQ-2 / GAD-2 question based on the user\'s PREVIOUS answer. This is what makes screening non-linear - each question references what they just said.' },
@@ -264,8 +264,8 @@ const SchemaBlock = ({ title, code }: any) => (
 );
 
 const ApiBlock = ({ method, endpoint, desc }: any) => (
-  <div className="flex flex-col md:flex-row gap-3 p-4 border border-[#d8d0c4] rounded-xl bg-[#fdfaf4] hover:border-[#4a7c59]/30 transition-colors">
-    <div className="flex items-center gap-2 md:w-5/12 shrink-0">
+  <div className="flex flex-col gap-2 p-4 border border-[#d8d0c4] rounded-xl bg-[#fdfaf4] hover:border-[#4a7c59]/30 transition-colors">
+    <div className="flex items-center gap-2 flex-wrap">
       <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white shrink-0 ${method === 'GET' ? 'bg-[#1565c0]' : method === 'POST' ? 'bg-[#2e7d32]' : 'bg-[#f57f17]'}`}>{method}</span>
       <code className="text-xs font-mono font-bold text-[#2c3028] break-all">{endpoint}</code>
     </div>

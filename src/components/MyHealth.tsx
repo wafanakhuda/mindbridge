@@ -117,7 +117,7 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6">
         {[
           { num: screenings.length, label: 'Screenings' },
           { num: upcoming.length, label: 'Upcoming Appts' },
@@ -131,7 +131,7 @@ export default function MyHealth({ setTab }: { setTab?: (tab: string) => void })
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-5">
+      <div className="flex gap-2 mb-4 flex-wrap">
         <button onClick={() => setActiveTab('appointments')}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === 'appointments' ? 'bg-[#4a7c59] text-white' : 'bg-white border border-[#d8d0c4] text-[#6b7265] hover:border-[#4a7c59]'}`}>
           <Calendar size={14} /> Appointments

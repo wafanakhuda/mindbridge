@@ -79,7 +79,7 @@ export default function PeerCommunity({ setTab }: { setTab?: (tab: string) => vo
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto px-6 py-12">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
       <div className="mb-10 text-center">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#e8f5e9] text-[#4a7c59] mb-5">
@@ -107,7 +107,7 @@ export default function PeerCommunity({ setTab }: { setTab?: (tab: string) => vo
             onChange={e => handleTextChange(e.target.value.slice(0, MAX_CHARS))}
             maxLength={MAX_CHARS}
             placeholder="Share what's on your mind… a small win, a struggle, or words of encouragement for others."
-            className="w-full bg-[#fdfaf4] border-2 border-[#f0ece5] rounded-2xl p-5 text-base focus:outline-none focus:border-[#7a9e7e] focus:ring-4 focus:ring-[#7a9e7e]/10 resize-none h-28 transition-all placeholder:text-[#a3a89f]"
+            className="w-full bg-[#fdfaf4] border-2 border-[#f0ece5] rounded-2xl p-5 text-base focus:outline-none focus:border-[#7a9e7e] focus:ring-4 focus:ring-[#7a9e7e]/10 resize-none h-28 transition-all placeholder:text-[#a3a89f]" style={{ fontSize: '16px' }}
             disabled={isSubmitting}
           />
           <div className={`text-right text-xs mt-1 transition-colors ${newPost.length > MAX_CHARS * 0.85 ? 'text-[#c4605a] font-bold' : 'text-[#a3a89f]'}`}>

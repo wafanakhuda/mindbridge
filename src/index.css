@@ -10,17 +10,58 @@
     --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   }
 
-  /* Softer, calmer green palette - override Tailwind hardcoded values via CSS vars */
+  html {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   body {
+    overflow-x: hidden;
     /* nav/hero dark: softer forest #3a6b3e instead of #2d5a30 */
     --c-nav: #4a7c59;
     --c-nav-dark: #3a6b3e;
     --c-sage: #7a9e7e;
     --c-sage-light: #b8d4ba;
     --c-cream: #f7f3ed;
+    /* Prevent iOS tap highlight */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Smooth scrolling everywhere */
+  * {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Ensure all inputs don't zoom on iOS (font-size >= 16px) */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  /* Better tap targets on mobile */
+  button, a, [role="button"] {
+    touch-action: manipulation;
   }
 }
 
 @keyframes shimmer {
   100% { transform: translateX(100%); }
+}
+
+/* Hide scrollbar for nav overflow scroll */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area insets for notch phones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-nav {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
 }

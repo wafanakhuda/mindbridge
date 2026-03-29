@@ -30,7 +30,7 @@ const CAMPAIGNS = [
 
 export default function Community({ setTab }: { setTab?: (tab: string) => void }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-6 py-12">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
       <div className="text-center mb-12">
         <div className="inline-flex items-center gap-2 bg-[#e8f5e9] text-[#4a7c59] px-4 py-1.5 rounded-full text-sm font-bold mb-4 border border-[#c8e6c9]">

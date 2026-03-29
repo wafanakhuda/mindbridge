@@ -25,6 +25,27 @@ async function callGemini(system: string, user: string, temp = 0.7, tokens = 400
   return text;
 }
 
+// Robust JSON extractor - handles markdown fences, trailing text, single quotes
+function extractJSON(raw: string): any {
+  // Strip markdown fences
+  let s = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // Find first { or [ and last } or ]
+  const start = s.search(/[{[]/);
+  if (start === -1) throw new Error('No JSON found');
+  s = s.slice(start);
+  // Find matching close bracket
+  const opener = s[0];
+  const closer = opener === '{' ? '}' : ']';
+  let depth = 0;
+  let end = -1;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === opener) depth++;
+    else if (s[i] === closer) { depth--; if (depth === 0) { end = i; break; } }
+  }
+  if (end === -1) throw new Error('Unclosed JSON');
+  return JSON.parse(s.slice(0, end + 1));
+}
+
 // ── AGENT 1: TriageAgent ─────────────────────────────────────────
 // Warm, personalised opening. References their exact words.
 export async function TriageAgent(input: string): Promise<string> {
@@ -82,9 +103,9 @@ ${chatGptContext ? `Background context: "${chatGptContext}"` : ''}`,
   } catch {
     const fallbacks = [
       'Over the past 2 weeks, how often have you noticed little interest or pleasure in the things you usually enjoy?',
-      'And over those same 2 weeks, how often have you been feeling down, low, or hopeless?',
+      'Over the past 2 weeks, how often have you been feeling down, depressed, or hopeless?',
       'How often over the past 2 weeks have you been feeling nervous, anxious, or on edge?',
-      'Finally, how often have you found it hard to stop or control your worrying over the past 2 weeks?',
+      'Finally, how often over the past 2 weeks have you found it hard to stop or control your worrying?',
     ];
     return { question: fallbacks[questionNumber] || fallbacks[3] };
   }
@@ -147,7 +168,7 @@ Full conversation: "${fullConversation}"
 ${chatGptContext ? `Prior context: "${chatGptContext}"` : ''}`,
       0.4, 400
     );
-    const p = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    const p = extractJSON(raw);
     return { riskLevel: p.riskLevel || base, riskScore: p.riskScore ?? score, riskTitle: p.riskTitle || fallbackTitle(base), riskIcon: p.riskIcon || fallbackIcon(base), personalMessage: p.personalMessage || fallbackMsg(base), keyInsight: p.keyInsight || '', sentimentFlag: p.sentimentFlag || '', primaryConcern: concern };
   } catch {
     return { riskLevel: base, riskScore: score, riskTitle: fallbackTitle(base), riskIcon: fallbackIcon(base), personalMessage: fallbackMsg(base), keyInsight: '', sentimentFlag: '', primaryConcern: concern };
@@ -190,7 +211,7 @@ Choose from: box breathing (anxiety), 5-4-3-2-1 grounding (racing thoughts), beh
       `PHQ-2: ${phq}/6 | GAD-2: ${gad}/6 | Risk: ${risk} | Context: "${context}"`,
       0.6, 350
     );
-    const p = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    const p = extractJSON(raw);
     return { title: p.title, type: p.type, instruction: p.steps?.join('\n') || '', rationale: p.rationale, duration: p.duration, steps: p.steps || [] };
   } catch {
     return gad >= phq ? {
@@ -217,8 +238,9 @@ LOW: focus on maintaining strengths`,
       `Risk: ${risk} | PHQ: ${phq} | GAD: ${gad} | Context: "${context}"`,
       0.6, 200
     );
-    const p = JSON.parse(raw.replace(/```json|```/g, '').trim());
-    return Array.isArray(p) && p.length >= 3 ? p.slice(0, 3) : fallbackSteps(risk);
+    const p = extractJSON(raw);
+    const arr = Array.isArray(p) ? p : (p.steps || p.nextSteps || p.recommendations || Object.values(p));
+    return Array.isArray(arr) && arr.length >= 3 ? arr.slice(0, 3).map(String) : fallbackSteps(risk);
   } catch { return fallbackSteps(risk); }
 }
 
@@ -241,7 +263,7 @@ export async function FollowUpAgent(days: number, risk: 'low' | 'moderate' | 'hi
 {"message":"2 warm sentences","urgency":"routine|concerned|urgent","suggestRescreening":true|false,"checkInQuestion":"one gentle open question"}`,
       `Days since screening: ${days} | Risk: ${risk} | Context: "${context}"`, 0.7, 200
     );
-    return JSON.parse(raw.replace(/```json|```/g, '').trim());
+    return extractJSON(raw);
   } catch {
     return { message: `It has been ${days} days since your last check-in. We hope you are doing okay.`, urgency: risk === 'high' ? 'urgent' : risk === 'moderate' ? 'concerned' : 'routine', suggestRescreening: true, checkInQuestion: 'How have you been feeling compared to when we last spoke?' };
   }

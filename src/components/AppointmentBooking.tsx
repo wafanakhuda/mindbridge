@@ -208,7 +208,7 @@ export default function AppointmentBooking({ riskLevel, isCritical = false, onCl
                   </h3>
                   <textarea value={notes} onChange={e => setNotes(e.target.value)}
                     placeholder="e.g. I have been experiencing anxiety for 3 months and my PHQ-2 score was 4..."
-                    className="w-full border border-[#d8d0c4] rounded-xl p-3 text-sm focus:outline-none focus:border-[#4a7c59] resize-none h-20 placeholder:text-[#a3a89f]" />
+                    className="w-full border border-[#d8d0c4] rounded-xl p-3 text-sm focus:outline-none focus:border-[#4a7c59] resize-none h-20 placeholder:text-[#a3a89f]" style={{ fontSize: '16px' }} />
                 </motion.div>
               )}
 

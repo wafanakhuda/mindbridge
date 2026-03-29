@@ -31,16 +31,16 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
           <div className="absolute inset-0 bg-gradient-to-t from-[#f5f0e8] via-transparent to-transparent"></div>
         </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 pt-20 pb-12 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-10 sm:pb-12 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
             animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium tracking-wide mb-8 backdrop-blur-md shadow-lg">
+            <span className="inline-block py-1.5 px-3 sm:px-4 rounded-full bg-white/10 border border-white/20 text-white/90 text-xs sm:text-sm font-medium tracking-wide mb-6 sm:mb-8 backdrop-blur-md shadow-lg max-w-xs sm:max-w-none text-center">
               Hack for Health Equity 2026 - Bridging Communities to Mental Health Care
             </span>
-            <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white leading-[1.1] mb-6 drop-shadow-2xl">
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-white leading-[1.1] mb-4 sm:mb-6 drop-shadow-2xl">
               Mental health support,<br/>
               <em className="text-[#f0c896] not-italic font-serif relative inline-block">
                 within reach.
@@ -49,7 +49,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
                 </svg>
               </em>
             </h1>
-            <p className="text-white/90 text-lg md:text-2xl mb-10 max-w-3xl mx-auto font-light leading-relaxed drop-shadow-md">
+            <p className="text-white/90 text-base sm:text-lg md:text-2xl mb-8 sm:mb-10 max-w-3xl mx-auto font-light leading-relaxed drop-shadow-md">
               A hybrid community-primary care mental health system connecting AI screening, clinic referrals, and structured follow-up - for every community, in 195 countries.
             </p>
             
@@ -78,7 +78,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
 
       {/* WHO Global Stats Bar */}
       <div className="bg-white border-b border-[#d8d0c4] py-8 px-6">
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center">
           {[
             { num: '1 in 7', label: 'people live with mental illness', src: 'WHO, 2025' },
             { num: '1B+',    label: 'people affected globally',        src: 'WHO, 2025' },
@@ -86,7 +86,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
             { num: '195',    label: 'countries in our directory',       src: 'MindBridge' },
           ].map((s) => (
             <div key={s.num}>
-              <div className="font-serif text-3xl md:text-4xl font-bold text-[#4a7c59]">{s.num}</div>
+              <div className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-[#4a7c59]">{s.num}</div>
               <div className="text-sm text-[#6b7265] mt-1 font-medium">{s.label}</div>
               <div className="text-xs text-[#a3a89f] mt-0.5">Source: {s.src}</div>
             </div>
@@ -140,7 +140,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
       {/* Features Section */}
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-16">
-          <h2 className="font-serif text-4xl md:text-5xl text-[#2c3028] mb-6">How MindBridge Works</h2>
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#2c3028] mb-4 sm:mb-6">How MindBridge Works</h2>
           <p className="text-lg text-[#6b7265] max-w-2xl mx-auto">Five specialist AI agents working together across a complete mental health care pathway.</p>
         </div>
 
@@ -149,7 +149,7 @@ export default function Home({ setTab }: { setTab: (tab: string) => void }) {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
         >
           <FeatureCard
             icon={<MessageCircle size={28} className="text-[#4d7a52]" />}

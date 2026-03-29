@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const roleMap = Object.fromEntries((data.usersByRole || []).map((r: any) => [r._id, r.count]));
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div className="flex items-center gap-3">
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-6 sm:mb-8">
         <KpiCard icon={<Users size={16} />}         label="Total Users"        num={data.totalUsers}         color="bg-[#e3f2fd]" text="text-[#1565c0]" />
         <KpiCard icon={<Activity size={16} />}      label="Total Screenings"   num={data.totalScreenings}    color="bg-[#e8f5e9]" text="text-[#2e7d32]" />
         <KpiCard icon={<Building2 size={16} />}     label="Doctors"            num={data.doctors}            color="bg-[#f3e5f5]" text="text-[#7b1fa2]" />
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
         <KpiCard icon={<ShieldCheck size={16} />}   label="System Alerts"      num={0}                       color="bg-[#e8f5e9]" text="text-[#2e7d32]" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
 
         {/* Users by role */}
         <div className="bg-white border border-[#d8d0c4] rounded-[1.5rem] p-6 shadow-sm">

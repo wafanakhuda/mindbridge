@@ -20,7 +20,7 @@ export default function Directory() {
   const hotlineCount = directoryData.filter(d => d.mentalHealth !== 'No national hotline listed').length;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-6xl mx-auto px-6 py-12">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="mb-12 text-center max-w-2xl mx-auto">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#c4605a]/10 text-[#c4605a] mb-6">
           <Globe2 size={32} />
@@ -47,7 +47,7 @@ export default function Directory() {
             className="w-full bg-white border-2 border-[#d8d0c4] rounded-full py-3.5 pl-12 pr-5 text-base shadow-sm focus:outline-none focus:border-[#7a9e7e] focus:ring-4 focus:ring-[#7a9e7e]/20 transition-all"
           />
         </div>
-        <div className="flex gap-2 items-center bg-white border-2 border-[#d8d0c4] rounded-full px-4 py-1 shadow-sm">
+        <div className="flex gap-2 items-center bg-white border-2 border-[#d8d0c4] rounded-full px-3 sm:px-4 py-1 shadow-sm flex-wrap">
           <Filter size={16} className="text-[#6b7265]" />
           {(['all', 'hotline', 'emergency-only'] as const).map(f => (
             <button

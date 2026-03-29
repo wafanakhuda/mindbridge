@@ -97,7 +97,7 @@ export default function App() {
           )}
         </div>
 
-        <div className="hidden md:flex gap-1 items-center flex-wrap">
+        <div className="hidden md:flex gap-1 items-center overflow-x-auto max-w-[calc(100vw-200px)] scrollbar-none">
           {userRole === 'patient' && (
             <>
               <NavButton active={currentTab === 'home'}      onClick={() => setCurrentTab('home')}      icon={<HomeIcon size={16} />}    label="Home" />
@@ -131,7 +131,7 @@ export default function App() {
         </div>
       </nav>
 
-      <main className="pb-24 md:pb-8">{renderTab()}</main>
+      <main className="pb-28 md:pb-8">{renderTab()}</main>
 
       {/* Footer */}
       {userRole === 'patient' && (
@@ -143,7 +143,7 @@ export default function App() {
       )}
 
       {/* Mobile Bottom Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#4a7c59] text-white flex justify-around py-2 z-50">
+      <div className="md:hidden mobile-nav fixed bottom-0 left-0 right-0 bg-[#4a7c59] text-white flex justify-around py-2 z-50 shadow-[0_-2px_12px_rgba(0,0,0,0.15)]">
         {userRole === 'patient' && (
           <>
             <MobileNavButton active={currentTab === 'home'}      onClick={() => setCurrentTab('home')}      icon={<HomeIcon size={20} />}      label="Home" />
@@ -182,8 +182,8 @@ const NavButton = ({ active, onClick, icon, label }: any) => (
 
 const MobileNavButton = ({ active, onClick, icon, label }: any) => (
   <button onClick={onClick}
-    className={`flex flex-col items-center gap-0.5 p-2 min-w-[52px] ${active ? 'text-white' : 'text-white/55'}`}>
-    {icon}
-    <span className="text-[9px] font-medium leading-tight">{label}</span>
+    className={`flex flex-col items-center gap-0.5 py-1 px-2 min-w-[48px] min-h-[44px] justify-center transition-all ${active ? 'text-white' : 'text-white/50 hover:text-white/75'}`}>
+    <div className={`transition-transform ${active ? 'scale-110' : 'scale-100'}`}>{icon}</div>
+    <span className={`text-[9px] font-medium leading-tight tracking-wide ${active ? 'opacity-100' : 'opacity-70'}`}>{label}</span>
   </button>
 );

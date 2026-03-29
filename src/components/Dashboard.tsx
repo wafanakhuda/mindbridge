@@ -61,7 +61,7 @@ export default function Dashboard() {
   const totalChannel = Object.values(channelMap).reduce((a, b) => a + b, 0) || 1;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-4 py-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -185,7 +185,7 @@ export default function Dashboard() {
       {recentAppointments.length > 0 && (
         <div className="bg-white border border-[#d8d0c4] rounded-[1.5rem] p-6 shadow-sm mb-6">
           <h3 className="font-bold text-[#2c3028] mb-4 flex items-center gap-2"><Calendar size={18} className="text-[#4a7c59]" /> Recent Appointments</h3>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-2 px-2">
             <table className="w-full text-xs">
               <thead>
                 <tr className="text-left text-[#6b7265] border-b border-[#f0ece5]">
@@ -199,7 +199,7 @@ export default function Dashboard() {
                 {recentAppointments.map((a: any, i: number) => (
                   <tr key={i} className="text-[#2c3028]">
                     <td className="py-2.5 font-medium">{a.doctorName} {a.isCritical && <span className="text-[#c62828] text-[10px] font-bold ml-1">CRISIS</span>}</td>
-                    <td className="py-2.5 text-[#6b7265]">{new Date(a.dateTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="py-2.5 text-[#6b7265] hidden sm:table-cell">{new Date(a.dateTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                     <td className="py-2.5">
                       <span className={`px-1.5 py-0.5 rounded-full font-bold text-[10px] ${a.riskLevel === 'high' ? 'bg-[#fce4ec] text-[#c62828]' : a.riskLevel === 'moderate' ? 'bg-[#fff8e1] text-[#f57f17]' : 'bg-[#e8f5e9] text-[#2e7d32]'}`}>
                         {a.riskLevel}

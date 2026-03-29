@@ -99,7 +99,7 @@ export default function VideoConsult() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto px-4 py-8">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto px-4 py-6 sm:py-8">
 
       <div className="text-center mb-8">
         <h2 className="font-serif text-4xl text-[#2c3028] mb-3">Real-Time Consultation</h2>
@@ -118,7 +118,7 @@ export default function VideoConsult() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FREE_DOCTORS.map((doc) => (
               <motion.div key={doc.name} whileHover={{ y: -4 }}
                 onClick={() => doc.available && setSelected(doc)}
@@ -183,14 +183,14 @@ export default function VideoConsult() {
             <p className="text-sm text-[#6b7265]">This is a secure, encrypted room. Share the link with your doctor or join directly.</p>
 
             <div className="flex items-center gap-2 bg-white rounded-xl border border-[#d8d0c4] p-3">
-              <span className="text-xs font-mono text-[#2c3028] flex-1 truncate">{meetUrl}</span>
+              <span className="text-xs font-mono text-[#2c3028] flex-1 truncate min-w-0">{meetUrl}</span>
               <button onClick={copyLink}
                 className="flex items-center gap-1.5 bg-[#f0ece5] hover:bg-[#d8d0c4] px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0">
                 {copied ? <><Check size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <a href={meetUrl} target="_blank" rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-[#4a7c59] text-white py-3.5 rounded-xl font-bold text-sm hover:bg-[#3a6b3e] transition-all shadow-md">
                 <Video size={16} /> Join Video Call

@@ -102,7 +102,7 @@ export default function SignIn({ onSignIn }: { onSignIn: (role: string, user: an
             className="w-full max-w-4xl relative z-10 space-y-4">
 
             {/* Portal cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <PersonaCard icon={<User size={28} />} title="Patient Portal"
                 description="Screen for anxiety and depression, access peer support, find crisis helplines, and book appointments."
                 color="bg-[#e8f5e9]" iconColor="text-[#2e7d32]" borderColor="border-[#c8e6c9]"
@@ -118,7 +118,7 @@ export default function SignIn({ onSignIn }: { onSignIn: (role: string, user: an
             </div>
 
             {/* Anonymous option */}
-            <div className="bg-white border border-[#d8d0c4] rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-white border border-[#d8d0c4] rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#f0ece5] flex items-center justify-center">
                   <UserX size={20} className="text-[#6b7265]" />
@@ -168,7 +168,7 @@ export default function SignIn({ onSignIn }: { onSignIn: (role: string, user: an
                   </label>
                   <input value={name} onChange={e => setName(e.target.value)} type="text"
                     placeholder={isDoctor ? 'Dr Your Name' : 'Your full name'}
-                    className="w-full border border-[#d8d0c4] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#4a7c59] focus:ring-2 focus:ring-[#4a7c59]/20" required />
+                    className="w-full border border-[#d8d0c4] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#4a7c59] focus:ring-2 focus:ring-[#4a7c59]/20" style={{ fontSize: '16px' }} required />
                 </div>
               )}
 
@@ -176,7 +176,7 @@ export default function SignIn({ onSignIn }: { onSignIn: (role: string, user: an
                 <label className="block text-sm font-medium text-[#2c3028] mb-1">Email</label>
                 <input value={email} onChange={e => setEmail(e.target.value)} type="email"
                   placeholder="you@example.com"
-                  className="w-full border border-[#d8d0c4] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#4a7c59] focus:ring-2 focus:ring-[#4a7c59]/20" required />
+                  className="w-full border border-[#d8d0c4] rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#4a7c59] focus:ring-2 focus:ring-[#4a7c59]/20" style={{ fontSize: '16px' }} required />
               </div>
 
               <div>

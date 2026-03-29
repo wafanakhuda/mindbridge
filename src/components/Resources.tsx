@@ -30,7 +30,7 @@ export default function Resources() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-6 py-12">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
       {/* Header */}
       <div className="mb-12 text-center max-w-2xl mx-auto">

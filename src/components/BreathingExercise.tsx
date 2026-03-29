@@ -56,14 +56,14 @@ export default function BreathingExercise({ onClose }: { onClose: () => void }) 
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={e => e.stopPropagation()}
-        className="bg-[#fdfaf4] rounded-[2rem] p-10 max-w-md w-full text-center shadow-2xl border border-[#d8d0c4]"
+        className="bg-[#fdfaf4] rounded-[2rem] p-6 sm:p-10 max-w-md w-full text-center shadow-2xl border border-[#d8d0c4]"
       >
         <h3 className="font-serif text-2xl text-[#2c3028] mb-2">Box Breathing</h3>
         <p className="text-[#6b7265] text-sm mb-8">4-4-4-4 technique - used by athletes and medical professionals to reduce anxiety instantly</p>
 
         {/* Breathing circle */}
         <div className="flex items-center justify-center mb-8">
-          <div className="relative w-48 h-48 flex items-center justify-center">
+          <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex items-center justify-center">
             <motion.div
               animate={{
                 scale: running ? current.scale : 1,

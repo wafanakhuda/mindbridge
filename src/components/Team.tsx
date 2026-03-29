@@ -37,7 +37,7 @@ const TEAM = [
 
 export default function Team() {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto px-6 py-12">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="text-center mb-14">
         <div className="inline-flex items-center gap-2 bg-[#e8f5e9] text-[#4a7c59] px-4 py-1.5 rounded-full text-sm font-bold mb-4">
           🌿 Hack for Health Equity 2026
@@ -48,7 +48,7 @@ export default function Team() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-14">
+      <div className="grid grid-cols-1 gap-5 sm:gap-6 mb-14">
         {TEAM.map((member, i) => (
           <motion.div
             key={member.name}
@@ -58,8 +58,8 @@ export default function Team() {
             whileHover={{ y: -4 }}
             className={`bg-white border-2 ${member.border} rounded-[2rem] p-8 shadow-sm hover:shadow-lg transition-all`}
           >
-            <div className="flex items-start gap-5">
-              <div className={`w-16 h-16 rounded-2xl ${member.bg} flex items-center justify-center text-3xl flex-shrink-0 shadow-inner`}>
+            <div className="flex items-start gap-3 sm:gap-5">
+              <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl ${member.bg} flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0 shadow-inner`}>
                 {member.emoji}
               </div>
               <div className="flex-1 min-w-0">
